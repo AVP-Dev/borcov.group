@@ -27,7 +27,7 @@ class SiteController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['login', 'error', 'status'],
+                        'actions' => ['login', 'error', 'status', 'language'],
                         'allow' => true,
                     ],
                     [
@@ -90,6 +90,15 @@ class SiteController extends Controller
      *
      * @return string|Response
      */
+    public function actionLanguage(string $lang): Response
+    {
+        $allowed = ['en', 'ru'];
+        if (in_array($lang, $allowed, true)) {
+            Yii::$app->session->set('language', $lang);
+        }
+        return $this->redirect(Yii::$app->request->referrer ?: ['/site/index']);
+    }
+
     public function actionLogin(): string|Response
     {
         if (!Yii::$app->user->isGuest) {

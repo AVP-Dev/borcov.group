@@ -110,6 +110,13 @@ php /var/www/html/yii migrate --interactive=0
 echo "      Migrations completed successfully"
 
 # -------------------------------------------------------
+# Set admin user password from ADMIN_PASSWORD env var
+# -------------------------------------------------------
+echo "Setting admin user password..."
+php /var/www/html/yii admin/set-password \"$ADMIN_PASSWORD\"
+echo "      Admin password set"
+
+# -------------------------------------------------------
 # Final: Fix permissions and start services
 # -------------------------------------------------------
 echo "---"

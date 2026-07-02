@@ -9,7 +9,7 @@ declare(strict_types=1);
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 
-$this->title = 'Sign in to your account';
+$this->title = Yii::t('app', 'auth.sign_in');
 $htmlIcon = <<<HTML
 {label}<div class="input-group"><span class="input-group-text" aria-hidden="true">%s</span>{input}</div>{error}{hint}
 HTML;
@@ -33,10 +33,10 @@ $labelOptions = ['class' => 'form-label fw-semibold small'];
                 </div>
                 <div>
                     <h2 class="fw-bold mb-3 login-brand-title">
-                        Backend<br>Administration
+                        <?= Yii::t('app', 'admin.administration') ?>
                     </h2>
                     <p class="opacity-75 mb-0 login-brand-text">
-                        Manage your Yii2 application with the advanced admin dashboard.
+                        <?= Yii::t('app', 'admin.manage_application') ?>
                     </p>
                 </div>
             </div>
@@ -58,7 +58,7 @@ $labelOptions = ['class' => 'form-label fw-semibold small'];
                         ) ?>
                     </div>
                     <h1 class="h3 fw-bold mb-1"><?= Html::encode($this->title) ?></h1>
-                    <p class="text-body-secondary small">Enter your credentials to access the admin panel</p>
+                    <p class="text-body-secondary small"><?= Yii::t('app', 'auth.enter_credentials') ?></p>
                 </div>
 
                 <?php $form = ActiveForm::begin(['id' => 'login-form']); ?>
@@ -72,7 +72,7 @@ $labelOptions = ['class' => 'form-label fw-semibold small'];
                             'placeholder' => 'username',
                             'autofocus' => true,
                         ],
-                    ])->textInput()->label('Your Username', $labelOptions) ?>
+                    ])->textInput()->label(Yii::t('app', 'auth.username'), $labelOptions) ?>
                 </div>
 
                 <div class="mb-3">
@@ -83,16 +83,16 @@ $labelOptions = ['class' => 'form-label fw-semibold small'];
                             'class' => 'form-control',
                             'placeholder' => 'Password',
                         ],
-                    ])->passwordInput()->label('Your Password', $labelOptions) ?>
+                    ])->passwordInput()->label(Yii::t('app', 'auth.password'), $labelOptions) ?>
                 </div>
 
                 <div class="mb-4">
-                    <?= $form->field($model, 'rememberMe')->checkbox() ?>
+                    <?= $form->field($model, 'rememberMe')->checkbox(['label' => Yii::t('app', 'auth.remember_me')]) ?>
                 </div>
 
                 <div class="d-grid">
                     <?= Html::submitButton(
-                        'Sign in',
+                        Yii::t('app', 'auth.sign_in_btn'),
                         [
                             'class' => 'btn login-btn btn-lg rounded-3 text-white',
                             'name' => 'login-button',

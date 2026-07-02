@@ -45,5 +45,11 @@ return [
             ],
         ],
     ],
+    'on beforeRequest' => function () {
+        $lang = Yii::$app->session->get('language', 'en');
+        if (in_array($lang, ['en', 'ru'], true)) {
+            Yii::$app->language = $lang;
+        }
+    },
     'params' => $params,
 ];

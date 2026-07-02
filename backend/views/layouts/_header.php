@@ -7,25 +7,31 @@ declare(strict_types=1);
 use yii\bootstrap5\Nav;
 use yii\bootstrap5\NavBar;
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 $items = [
     [
-        'label' => 'Home',
+        'label' => Yii::t('app', 'nav.home'),
         'url' => ['/site/index'],
     ],
     [
-        'label' => 'Login',
+        'label' => Yii::t('app', 'nav.login'),
         'url' => ['/site/login'],
         'visible' => Yii::$app->user->isGuest,
     ],
     [
-        'label' => 'Logout (' . Html::encode(Yii::$app->user->identity?->username) . ')',
+        'label' => Yii::t('app', 'nav.logout', ['username' => Html::encode(Yii::$app->user->identity?->username ?? '')]),
         'url' => ['/site/logout'],
         'linkOptions' => [
             'data-method' => 'post',
             'class' => 'logout',
         ],
         'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
+        'label' => Yii::$app->language === 'ru' ? Yii::t('app', 'lang.en') : Yii::t('app', 'lang.ru'),
+        'url' => ['/site/language', 'lang' => Yii::$app->language === 'ru' ? 'en' : 'ru'],
+        'linkOptions' => ['class' => 'nav-link'],
     ],
 ];
 ?>
@@ -49,7 +55,7 @@ $items = [
         [
             'id' => 'theme-toggle',
             'class' => 'btn btn-link nav-link fs-5',
-            'aria-label' => 'Switch to dark mode',
+            'aria-label' => Yii::t('app', 'nav.toggle_dark'),
         ],
     ) ?>
     <?php NavBar::end() ?>
