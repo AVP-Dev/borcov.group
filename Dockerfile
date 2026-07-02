@@ -1,6 +1,6 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.4-fpm-alpine
 
-# Install system dependencies
+# Install system dependencies (keep only runtime necessities)
 RUN apk add --no-cache \
     bash \
     curl \
@@ -8,14 +8,13 @@ RUN apk add --no-cache \
     unzip \
     nginx \
     supervisor \
-    openssl \
-    postgresql-dev \
-    icu-dev \
-    libzip-dev \
-    oniguruma-dev
+    openssl
 
-# Install PHP extensions
-RUN docker-php-ext-install \
+# Install php-extension-installer
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+
+# Install PHP extensions using the installer (highly optimized, handles deps & cleanup)
+RUN install-php-extensions \
     pdo_pgsql \
     pgsql \
     intl \
