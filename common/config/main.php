@@ -32,7 +32,6 @@ return [
             'db' => 'db',
             'tableName' => '{{%queue}}',
             'channel' => 'default',
-            'mutex' => false,
         ],
     ],
 ];

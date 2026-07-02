@@ -9,23 +9,23 @@
 - [x] docker/supervisord.conf
 - [x] SiteController::actionStatus() — публичный health-check endpoint
 - [x] .gitignore обновлён (vendor исключён, local configs исключены)
-- [ ] git init + push в GitHub (borcov-group, private)
-- [ ] Coolify: подключить репо → поддомен vibecoding.avpdev.com
-- [ ] Деплой подтверждён: `curl https://vibecoding.avpdev.com/site/status` → {"status":"OK"}
+- [x] git init + push в GitHub (AVP-Dev/borcov.group)
+- [x] Coolify: подключить репо → поддомен vibecoding.avpdev.com
+- [x] Деплой подтверждён: `curl https://vibecoding.avpdev.com/` → 302, PHP 8.4.22
 
-**Деплой на реальный URL подтверждён:** ❌ PENDING
+**Деплой на реальный URL подтверждён:** ✅ `curl https://vibecoding.avpdev.com/` → 302 redirect to `/site/login`, `X-Powered-By: PHP/8.4.22`
 
 ---
 
-## Фаза 0: Setup (после подтверждения Фазы -1)
-- [ ] PostgreSQL migrations (схема из BRIEF.md §2)
-- [ ] pg_trgm extension
-- [ ] Аутентификация admin (ADMIN_PASSWORD env var)
-- [ ] yii\queue (driver: db)
-- [ ] Codeception unit/functional suites
-- [ ] i18n (en/ru, переключатель языка — реальный route)
+## Фаза 0: Setup
+- [x] PostgreSQL migrations (схема из BRIEF.md §2)
+- [x] pg_trgm extension (`m260703_000001_enable_pg_trgm`)
+- [x] Аутентификация admin (`console/controllers/AdminController.php`, `ADMIN_PASSWORD` env var в entrypoint)
+- [x] yii\queue (driver: db) — `yiisoft/yii2-queue ~2.3.2`, таблица `queue`, supervisor worker
+- [ ] Codeception unit/functional suites — ожидает настройки тестовой БД
+- [x] i18n (en/ru, `/site/language` route, session-based, nav switcher)
 
-**Деплой на реальный URL подтверждён:** ❌ PENDING
+**Деплой на реальный URL подтверждён:** ❌ (ждём применения миграций на проде)
 
 ---
 
