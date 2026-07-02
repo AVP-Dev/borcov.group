@@ -1,0 +1,38 @@
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      DB_HOST: postgres
+      DB_NAME: ${DB_NAME:-keyword_platform}
+      DB_USER: ${DB_USER:-yii2}
+      DB_PASS: ${DB_PASS:-secret}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+      YII_ENV: ${YII_ENV:-prod}
+      YII_DEBUG: ${YII_DEBUG:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-keyword_platform}
+      POSTGRES_USER: ${DB_USER:-yii2}
+      POSTGRES_PASSWORD: ${DB_PASS:-secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-yii2} -d ${DB_NAME:-keyword_platform}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
