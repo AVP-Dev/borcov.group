@@ -18,8 +18,12 @@ RUN install-php-extensions \
     pdo_pgsql \
     pgsql \
     intl \
-    zip \
     opcache
+
+# Install zip extension using official docker-php-ext-install (more reliable on aarch64)
+RUN apk add --no-cache libzip-dev && \
+    docker-php-ext-install zip && \
+    apk del libzip-dev
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
