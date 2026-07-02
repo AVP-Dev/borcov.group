@@ -25,8 +25,6 @@ services:
       POSTGRES_DB: ${DB_NAME:-keyword_platform}
       POSTGRES_USER: ${DB_USER:-yii2}
       POSTGRES_PASSWORD: ${DB_PASS:-secret}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-yii2} -d ${DB_NAME:-keyword_platform}"]
       interval: 5s
@@ -34,5 +32,3 @@ services:
       retries: 10
     restart: unless-stopped
 
-volumes:
-  postgres_data:
