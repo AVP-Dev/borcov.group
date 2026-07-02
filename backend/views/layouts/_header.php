@@ -30,7 +30,7 @@ $items = [
     ],
     [
         'label' => Yii::$app->language === 'ru' ? Yii::t('app', 'lang.en') : Yii::t('app', 'lang.ru'),
-        'url' => ['/site/language', 'lang' => Yii::$app->language === 'ru' ? 'en' : 'ru'],
+        'url' => ['/site/set-language', 'lang' => Yii::$app->language === 'ru' ? 'en' : 'ru'],
         'linkOptions' => ['class' => 'nav-link'],
     ],
 ];

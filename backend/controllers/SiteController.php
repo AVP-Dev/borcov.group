@@ -27,7 +27,7 @@ class SiteController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['login', 'error', 'status', 'language'],
+                        'actions' => ['login', 'error', 'status', 'set-language'],
                         'allow' => true,
                     ],
                     [
@@ -90,7 +90,7 @@ class SiteController extends Controller
      *
      * @return string|Response
      */
-    public function actionLanguage(string $lang): Response
+    public function actionSetLanguage(string $lang): Response
     {
         $allowed = ['en', 'ru'];
         if (in_array($lang, $allowed, true)) {
