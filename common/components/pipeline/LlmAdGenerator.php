@@ -164,14 +164,14 @@ class LlmAdGenerator implements AdGeneratorInterface
                 continue;
             }
             $results[] = new AdData(
-                headline1: mb_substr((string)$item['headline1'], 0, AdGeneratorInterface::MAX_HEADLINE_LENGTH),
-                headline2: mb_substr((string)($item['headline2'] ?? $item['headline1']), 0, AdGeneratorInterface::MAX_HEADLINE_LENGTH),
-                headline3: isset($item['headline3']) ? mb_substr((string)$item['headline3'], 0, AdGeneratorInterface::MAX_HEADLINE_LENGTH) : null,
-                description1: mb_substr((string)$item['description1'], 0, AdGeneratorInterface::MAX_DESCRIPTION_LENGTH),
-                description2: isset($item['description2']) ? mb_substr((string)$item['description2'], 0, AdGeneratorInterface::MAX_DESCRIPTION_LENGTH) : null,
+                headline1: (string)$item['headline1'],
+                headline2: (string)($item['headline2'] ?? $item['headline1']),
+                headline3: isset($item['headline3']) ? (string)$item['headline3'] : null,
+                description1: (string)$item['description1'],
+                description2: isset($item['description2']) ? (string)$item['description2'] : null,
                 finalUrl: $targetUrl,
-                path1: isset($item['path1']) ? mb_substr((string)$item['path1'], 0, AdGeneratorInterface::MAX_PATH_LENGTH) : null,
-                path2: isset($item['path2']) ? mb_substr((string)$item['path2'], 0, AdGeneratorInterface::MAX_PATH_LENGTH) : null,
+                path1: isset($item['path1']) ? (string)$item['path1'] : null,
+                path2: isset($item['path2']) ? (string)$item['path2'] : null,
                 source: AdData::SOURCE_LLM,
             );
         }

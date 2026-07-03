@@ -106,12 +106,12 @@ final class LlmAdGeneratorTest extends Unit
                     'message' => [
                         'content' => '```json
 [
-  {
+      {
     "headline1": "Build Your Website Fast",
     "headline2": "Best Website Builder 2026",
     "headline3": "Try Free Today",
-    "description1": "Create a professional website in minutes with site.pro. No coding required. Start your free trial now.",
-    "description2": "Join 1M+ businesses using site.pro for their online presence.",
+    "description1": "Create a professional website in minutes with site.pro. Start your free trial now.",
+    "description2": "Join 1M+ businesses using site.pro.",
     "path1": "website-builder",
     "path2": "free-trial"
   }
