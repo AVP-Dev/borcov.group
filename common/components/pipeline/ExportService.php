@@ -91,7 +91,7 @@ class ExportService
         $headers[] = 'Path 1';
         $headers[] = 'Path 2';
 
-        fputcsv($handle, $headers);
+        fputcsv($handle, $headers, escape: '');
 
         $adsCount = 0;
         $keywordCount = 0;
@@ -135,7 +135,7 @@ class ExportService
             $row[] = $ad->path_1 ?? '';
             $row[] = $ad->path_2 ?? '';
 
-            fputcsv($handle, $row);
+            fputcsv($handle, $row, escape: '');
             $adsCount++;
         }
 
