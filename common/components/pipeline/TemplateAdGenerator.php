@@ -60,7 +60,7 @@ class TemplateAdGenerator implements AdGeneratorInterface
         'ru' => [
             '{keyword}',
             '{keyword} — бесплатно',
-            'Лучший {keyword}',
+            '{keyword}: топ-решение',
             '{keyword} онлайн',
             '{keyword} сегодня',
         ],
@@ -97,10 +97,9 @@ class TemplateAdGenerator implements AdGeneratorInterface
         $pairCount = min(count($headlines), count($descriptions));
 
         for ($i = 0; $i < $pairCount; $i++) {
-            $h1 = $this->fill($headlines[$i], $keywordText, $usp);
-            $h2 = $this->fill($headlines[($i + 1) % count($headlines)], $keywordText, $usp);
-
-            $d1 = $this->fill($descriptions[$i], $keywordText, $usp);
+            $h1 = $this->mbUcfirst($this->fill($headlines[$i], $keywordText, $usp));
+            $h2 = $this->mbUcfirst($this->fill($headlines[($i + 1) % count($headlines)], $keywordText, $usp));
+            $d1 = $this->mbUcfirst($this->fill($descriptions[$i], $keywordText, $usp));
 
             $ads[] = new AdData(
                 headline1: $this->truncateWordSafe($h1, self::MAX_HEADLINE_LENGTH),
@@ -116,6 +115,14 @@ class TemplateAdGenerator implements AdGeneratorInterface
         }
 
         return $ads;
+    }
+
+    private function mbUcfirst(string $text): string
+    {
+        if ($text === '') {
+            return $text;
+        }
+        return mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
     }
 
     private function truncateWordSafe(string $text, int $maxLength): string

@@ -53,8 +53,8 @@ final class TemplateAdGeneratorTest extends Unit
         $generator = new TemplateAdGenerator();
         $ads = $generator->generate($group, $keyword);
 
-        verify(isset($ads[0]));
-        verify(mb_strpos($ads[0]->description1, 'бухгалтерия') !== false);
+        verify(count($ads))->equals(3);
+        verify(mb_stripos($ads[0]->headline1, 'бухгалтерия') !== false);
     }
 
     public function testKeywordSubstitutionInHeadlines(): void
@@ -63,8 +63,10 @@ final class TemplateAdGeneratorTest extends Unit
         $generator = new TemplateAdGenerator();
         $ads = $generator->generate($group, $keyword);
 
+        verify(count($ads))->equals(3);
+
         foreach ($ads as $ad) {
-            verify(str_contains($ad->headline1, 'best website builder'));
+            verify(mb_stripos($ad->headline1, 'best website builder') !== false);
         }
     }
 
@@ -107,6 +109,69 @@ final class TemplateAdGeneratorTest extends Unit
                     verify(mb_strlen($ad->description1) <= AdGeneratorInterface::MAX_DESCRIPTION_LENGTH);
                 }
             }
+        }
+    }
+
+    public function testAllGeneratedTextStartsWithUppercase(): void
+    {
+        $generator = new TemplateAdGenerator();
+        $categories = [
+            Keyword::CATEGORY_WEBSITE_BUILDER,
+            Keyword::CATEGORY_EMAIL,
+            Keyword::CATEGORY_DOMAINS,
+            Keyword::CATEGORY_ACCOUNTING,
+            Keyword::CATEGORY_INVOICING,
+            Keyword::CATEGORY_RESELLER,
+        ];
+        $languages = ['en', 'ru'];
+        $keywords = [
+            'en' => 'website builder',
+            'ru' => 'конструктор сайтов',
+        ];
+
+        foreach ($languages as $lang) {
+            foreach ($categories as $cat) {
+                [$group, $keyword] = $this->makeGroupAndKeyword($cat, Keyword::AUDIENCE_B2C, $lang, $keywords[$lang]);
+                $ads = $generator->generate($group, $keyword);
+
+                verify(count($ads) > 0);
+
+                foreach ($ads as $ad) {
+                    $h1first = mb_substr($ad->headline1, 0, 1);
+                    verify(mb_strtoupper($h1first) === $h1first)->true(
+                        "headline1 '{$ad->headline1}' does not start with uppercase"
+                    );
+                    $h2first = mb_substr($ad->headline2, 0, 1);
+                    verify(mb_strtoupper($h2first) === $h2first)->true(
+                        "headline2 '{$ad->headline2}' does not start with uppercase"
+                    );
+                    $d1first = mb_substr($ad->description1, 0, 1);
+                    verify(mb_strtoupper($d1first) === $d1first)->true(
+                        "description1 '{$ad->description1}' does not start with uppercase"
+                    );
+                }
+            }
+        }
+    }
+
+    public function testInvoicingRuNoGenderMismatch(): void
+    {
+        $keywordText = 'выставление счетов';
+        [$group, $keyword] = $this->makeGroupAndKeyword(
+            Keyword::CATEGORY_INVOICING, Keyword::AUDIENCE_B2C, 'ru', $keywordText
+        );
+        $generator = new TemplateAdGenerator();
+        $ads = $generator->generate($group, $keyword);
+
+        verify(count($ads) > 0);
+
+        foreach ($ads as $ad) {
+            verify(mb_stripos($ad->headline1, 'Лучший'))->false(
+                "headline1 '{$ad->headline1}' contains gender-dependent 'Лучший'"
+            );
+            verify(mb_stripos($ad->headline2, 'Лучший'))->false(
+                "headline2 '{$ad->headline2}' contains gender-dependent 'Лучший'"
+            );
         }
     }
 
