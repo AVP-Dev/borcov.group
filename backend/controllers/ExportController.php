@@ -76,14 +76,15 @@ class ExportController extends Controller
 
         if ($adsCount === 0) {
             Yii::$app->session->setFlash('warning', Yii::t('app', 'export.nothing_to_export'));
-        } else {
-            Yii::$app->session->setFlash(
-                'success',
-                Yii::t('app', 'export.success', ['ads' => $adsCount, 'keywords' => $keywordsCount]),
-            );
+            return $this->redirect(['index']);
         }
 
-        return $this->redirect(['index']);
+        // Send file directly — browser shows Save As dialog
+        return Yii::$app->response->sendFile(
+            $filePath,
+            basename($filePath),
+            ['mimeType' => 'text/csv'],
+        );
     }
 
     public function actionReset(): Response

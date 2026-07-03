@@ -319,15 +319,6 @@ if (deselectAllBtn) {
     });
 }
 
-// Export button loading state
-if (exportBtn) {
-    exportBtn.addEventListener('click', function() {
-        // Ensure the form submits with ad_ids, not group_ids
-        this.classList.add('disabled');
-        this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Exporting...';
-    });
-}
-
 // Reset button
 if (resetBtn) {
     resetBtn.addEventListener('click', function(e) {
