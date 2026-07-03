@@ -9,8 +9,16 @@ echo "=============================================="
 # -------------------------------------------------------
 # 1. Generate cookieValidationKey EXPLICITLY (AGENTS.md rule #1)
 # -------------------------------------------------------
-COOKIE_KEY=$(openssl rand -base64 32)
-echo "[1/5] Generated cookieValidationKey"
+# 1. Generate cookieValidationKey — DETERMINISTIC from stable env vars
+#    (random key would invalidate all sessions on every container restart)
+# -------------------------------------------------------
+if [ -n "$COOKIE_VALIDATION_KEY" ]; then
+    COOKIE_KEY="$COOKIE_VALIDATION_KEY"
+    echo "[1/5] Using COOKIE_VALIDATION_KEY from env"
+else
+    COOKIE_KEY=$(echo "${DB_HOST:-postgres}:${DB_NAME:-keyword_platform}:${DB_USER:-yii2}:${DB_PASS:-secret}:v3" | openssl dgst -sha256 -binary | openssl base64)
+    echo "[1/5] Generated deterministic cookieValidationKey from DB credentials"
+fi
 
 # -------------------------------------------------------
 # 2. Generate local configs if missing (first run in fresh environment)
