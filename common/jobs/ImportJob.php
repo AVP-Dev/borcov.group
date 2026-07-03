@@ -121,7 +121,12 @@ class ImportJob extends BaseObject implements JobInterface
                 'search_console' => new JsonAdapter([
                     'fieldMap' => ['keyword' => 'keys.0', 'volume' => 'impressions'],
                 ]),
-                default => throw new \InvalidArgumentException("JSON not supported for source type: $sourceType"),
+                default => new JsonAdapter([
+                    'fieldMap' => [
+                        'keyword' => ['keyword', 'query', 'keys.0', 'name', 'term', 'key'],
+                        'volume' => ['volume', 'impressions', 'clicks', 'count', 'search_volume', 'traffic'],
+                    ],
+                ]),
             };
         }
 
@@ -166,7 +171,9 @@ class ImportJob extends BaseObject implements JobInterface
     private function failBatch(ImportBatch $batch, string $reason): void
     {
         $batch->status = ImportBatch::STATUS_FAILED;
-        $batch->error_message = $reason;
+        if ($batch->hasAttribute('error_message')) {
+            $batch->error_message = $reason;
+        }
         $batch->save();
     }
 

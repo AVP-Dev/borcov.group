@@ -8,6 +8,7 @@ use yii\base\BaseObject;
 
 class JsonAdapter extends BaseObject implements SourceAdapterInterface
 {
+    /** @var array<string, string|string[]> field name → source path(s) */
     public array $fieldMap = [
         'keyword' => 'query',
         'volume' => 'impressions',
@@ -30,26 +31,35 @@ class JsonAdapter extends BaseObject implements SourceAdapterInterface
         foreach ($rows as $row) {
             $mapped = [];
             foreach ($this->fieldMap as $target => $source) {
-                $mapped[$target] = $this->getNestedValue($row, $source);
+                $mapped[$target] = $this->findValue($row, (array)$source);
             }
             yield $mapped;
         }
     }
 
-    private function getNestedValue(array $row, string $path): mixed
+    /**
+     * Try each path, return first non-null value found.
+     * @param array $row
+     * @param string[] $paths
+     */
+    private function findValue(array $row, array $paths): mixed
     {
-        if (!str_contains($path, '.')) {
-            return $row[$path] ?? null;
-        }
-        $parts = explode('.', $path);
-        $current = $row;
-        foreach ($parts as $part) {
-            if (!is_array($current) || !array_key_exists($part, $current)) {
-                return null;
+        foreach ($paths as $path) {
+            $parts = explode('.', (string)$path);
+            $current = $row;
+            $found = true;
+            foreach ($parts as $part) {
+                if (!is_array($current) || !array_key_exists($part, $current)) {
+                    $found = false;
+                    break;
+                }
+                $current = $current[$part];
             }
-            $current = $current[$part];
+            if ($found && $current !== null) {
+                return $current;
+            }
         }
-        return $current;
+        return null;
     }
 
     private function extractRows(array $data): array
