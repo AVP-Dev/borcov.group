@@ -42,26 +42,28 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?= Html::beginForm(['create'], 'post', ['id' => 'export-form']) ?>
                 <?= Html::beginForm(['reset'], 'post', ['id' => 'reset-form', 'style' => 'display:none']) ?>
 
-                <!-- Filters -->
-                <?= Html::beginForm(['index'], 'get', ['class' => 'row g-2 mb-3 align-items-end', 'id' => 'filter-form']) ?>
+                <!-- Filters (client-side, no page reload) -->
+                <div class="row g-2 mb-3 align-items-end">
                     <div class="col-auto">
-                        <?= Html::dropDownList('category', $filterCategory, ['' => Yii::t('app', 'export.filter_all_categories')] + $categoryOptions, [
-                            'class' => 'form-select form-select-sm',
-                            'onchange' => 'this.form.submit()',
-                        ]) ?>
+                        <select id="filter-category" class="form-select form-select-sm">
+                            <option value=""><?= Yii::t('app', 'export.filter_all_categories') ?></option>
+                            <?php foreach ($categoryOptions as $catKey => $catLabel): ?>
+                                <option value="<?= $catKey ?>"><?= Html::encode($catLabel) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="col-auto">
-                        <?= Html::dropDownList('language', $filterLanguage, ['' => Yii::t('app', 'export.filter_all_languages')] + $languageOptions, [
-                            'class' => 'form-select form-select-sm',
-                            'onchange' => 'this.form.submit()',
-                        ]) ?>
+                        <select id="filter-language" class="form-select form-select-sm">
+                            <option value=""><?= Yii::t('app', 'export.filter_all_languages') ?></option>
+                            <?php foreach ($languageOptions as $langKey => $langLabel): ?>
+                                <option value="<?= $langKey ?>"><?= Html::encode($langLabel) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-                    <?php if ($filterCategory !== '' || $filterLanguage !== ''): ?>
-                        <div class="col-auto">
-                            <?= Html::a(Yii::t('app', 'export.clear_filters'), ['index'], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
-                        </div>
-                    <?php endif; ?>
-                <?= Html::endForm() ?>
+                    <div class="col-auto">
+                        <button type="button" id="filter-clear" class="btn btn-sm btn-outline-secondary" style="display:none"><?= Yii::t('app', 'export.clear_filters') ?></button>
+                    </div>
+                </div>
 
                 <div class="mb-3 d-flex gap-2 flex-wrap">
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="select-all"><?= Yii::t('app', 'export.select_all') ?></button>
@@ -360,5 +362,81 @@ if (resetBtn) {
         this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Resetting...';
     });
 }
+
+// ===== Client-side filters (no page reload) =====
+var filterCat = document.getElementById('filter-category');
+var filterLang = document.getElementById('filter-language');
+var filterClear = document.getElementById('filter-clear');
+
+// Set initial filter values from server (if page was loaded with ?category=...)
+if (filterCat && '<?= $filterCategory ?>') filterCat.value = '<?= $filterCategory ?>';
+if (filterLang && '<?= $filterLanguage ?>') filterLang.value = '<?= $filterLanguage ?>';
+
+// Apply initial filters on page load
+if (filterCat || filterLang) {
+    applyFilters();
+}
+
+function applyFilters() {
+    var cat = filterCat ? filterCat.value : '';
+    var lang = filterLang ? filterLang.value : '';
+
+    document.querySelectorAll('.group-row').forEach(function(row) {
+        var catCell = row.querySelector('td:nth-child(4) .badge');
+        var langCell = row.querySelector('td:nth-child(5) .badge');
+        var rowCat = catCell ? catCell.textContent.trim().toLowerCase() : '';
+        var rowLang = langCell ? langCell.textContent.trim().toLowerCase() : '';
+
+        var show = true;
+        if (cat && rowCat.indexOf(cat.toLowerCase()) === -1) show = false;
+        if (lang && rowLang !== lang.toLowerCase()) show = false;
+
+        row.style.display = show ? '' : 'none';
+
+        // Also hide/show the ads row below
+        var adsRow = document.getElementById('group-ads-' + row.getAttribute('data-group-id'));
+        if (adsRow && adsRow.style.display !== 'none') {
+            adsRow.style.display = show ? '' : 'none';
+        }
+    });
+
+    if (filterClear) {
+        filterClear.style.display = (cat || lang) ? '' : 'none';
+    }
+}
+
+if (filterCat) filterCat.addEventListener('change', applyFilters);
+if (filterLang) filterLang.addEventListener('change', applyFilters);
+if (filterClear) filterClear.addEventListener('click', function() {
+    if (filterCat) filterCat.value = '';
+    if (filterLang) filterLang.value = '';
+    applyFilters();
+});
+
+// Also update check-all scope to only see visible rows
+var origUpdateCount = updateCount;
+updateCount = function() {
+    var checkedAds = document.querySelectorAll('.ad-check:checked');
+    var checkedGroups = document.querySelectorAll('.group-check:checked');
+    var totalCount = checkedAds.length;
+    var draftCount = 0;
+    var exportedCount = 0;
+
+    checkedAds.forEach(function(cb) {
+        var row = cb.closest('tr');
+        if (row) {
+            var statusBadge = row.querySelector('.badge.bg-success') || row.querySelector('.badge.bg-secondary');
+            if (statusBadge && statusBadge.classList.contains('bg-success')) draftCount++;
+            else if (statusBadge) exportedCount++;
+        }
+    });
+
+    if (selectedCount) {
+        selectedCount.textContent = totalCount + ' selected (' + draftCount + ' draft, ' + exportedCount + ' exported)';
+    }
+
+    if (exportBtn) exportBtn.disabled = totalCount === 0;
+    if (resetBtn) resetBtn.disabled = exportedCount === 0 || totalCount === 0;
+};
 JS);
 ?>

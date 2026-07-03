@@ -55,9 +55,9 @@ class ExportController extends Controller
             $filteredStats[$groupId] = $stats;
         }
 
-        // Load ads for each group (for expandable rows)
+        // Load ads for ALL groups (client-side filtering hides rows, doesn't remove them)
         $groupAds = [];
-        foreach ($filteredStats as $groupId => $stats) {
+        foreach ($groupStats as $groupId => $stats) {
             $groupAds[$groupId] = Ad::find()
                 ->where(['ad_group_id' => $groupId])
                 ->orderBy(['status' => SORT_ASC, 'id' => SORT_ASC])
@@ -86,7 +86,7 @@ class ExportController extends Controller
 
         return $this->render('index', [
             'historyProvider' => $historyProvider,
-            'groupStats' => $filteredStats,
+            'groupStats' => $groupStats, // ALL groups — client-side JS does the filtering
             'groupAds' => $groupAds,
             'filterCategory' => $filterCategory,
             'filterLanguage' => $filterLanguage,
