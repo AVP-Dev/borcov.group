@@ -111,14 +111,12 @@ $this->registerJs($overrideJs);
                 <?php endforeach; ?>
             <?= Html::endForm() ?>
         </div>
-        <small class="text-muted">
-            <?= $dataProvider->totalCount ?> <?= Yii::t('app', 'keywords.total') ?>,
-            <?= $dataProvider->pagination->page + 1 ?>/<?= $dataProvider->pagination->pageCount ?>
-        </small>
     </div>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
+        'layout' => "<div class=\"d-flex justify-content-between align-items-center my-2\"><small class=\"text-muted\">{summary}</small></div>\n{items}\n{pager}",
+        'summaryOptions' => ['tag' => false],
         'tableOptions' => ['class' => 'table table-striped table-bordered table-sm mb-0'],
         'pager' => [
             'class' => \yii\bootstrap5\LinkPager::class,
