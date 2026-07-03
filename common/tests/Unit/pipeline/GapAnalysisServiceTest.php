@@ -6,6 +6,7 @@ namespace common\tests\Unit\pipeline;
 
 use Codeception\Test\Unit;
 use common\components\pipeline\GapAnalysisService;
+use common\models\BrandTerm;
 use common\models\ImportBatch;
 use common\models\Source;
 use common\models\Keyword;
@@ -23,6 +24,7 @@ final class GapAnalysisServiceTest extends Unit
         parent::_setUp();
         $this->seedSources();
         $this->seedBatch();
+        $this->seedBrandTerms();
         $this->seedKeywords();
     }
 
@@ -64,6 +66,17 @@ final class GapAnalysisServiceTest extends Unit
 
         $texts = array_column($result, 'normalized_text');
         verify(in_array('niche tool', $texts))->false();
+    }
+
+    public function testExcludesCompetitorBrand(): void
+    {
+        $service = new GapAnalysisService();
+        $service->minVolume = 10;
+        $result = $service->analyze();
+
+        $texts = array_column($result, 'normalized_text');
+        verify(in_array('wix конструктор', $texts))->false();
+        verify(in_array('tilda конструктор', $texts))->false();
     }
 
     public function testResultStructure(): void
@@ -113,6 +126,23 @@ final class GapAnalysisServiceTest extends Unit
         $this->scId = Source::findOne(['type' => 'search_console'])->id;
     }
 
+    private function seedBrandTerms(): void
+    {
+        if (BrandTerm::find()->count() > 0) {
+            return;
+        }
+        foreach ([
+            ['wix', false],
+            ['tilda', false],
+            ['site.pro', true],
+        ] as [$term, $isOwn]) {
+            $bt = new BrandTerm();
+            $bt->term = $term;
+            $bt->is_own_brand = $isOwn;
+            $bt->save();
+        }
+    }
+
     private function seedBatch(): void
     {
         if (ImportBatch::findOne(1) !== null) {
@@ -141,6 +171,10 @@ final class GapAnalysisServiceTest extends Unit
             ['competitor exclusive tool', 500, $this->ahrefsPaidId, $batchId, Keyword::STATUS_READY],
             ['sitebuilder', 200, $this->ahrefsPaidId, $batchId, Keyword::STATUS_READY],
             ['niche tool', 5, $this->ahrefsPaidId, $batchId, Keyword::STATUS_READY],
+
+            // Competitor brand keywords must NOT appear in gap candidates
+            ['wix конструктор', 22000, $this->ahrefsPaidId, $batchId, Keyword::STATUS_REJECTED],
+            ['tilda конструктор', 15000, $this->ahrefsPaidId, $batchId, Keyword::STATUS_REJECTED],
 
             // GAds — keywords site.pro already targets
             ['best website builder', 1000, $this->gadsId, $batchId, Keyword::STATUS_READY],

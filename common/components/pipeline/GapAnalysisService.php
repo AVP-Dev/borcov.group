@@ -12,6 +12,7 @@ use common\models\Keyword;
 class GapAnalysisService extends Component
 {
     public float $similarityThreshold = 0.6;
+    public float $brandFuzzyThreshold = 0.6;
     public int $minVolume = 10;
 
     public function analyze(): array
@@ -34,6 +35,7 @@ class GapAnalysisService extends Component
             ':ahrefsId' => $ahrefsId,
             ':minVolume' => $this->minVolume,
             ':simThreshold' => $this->similarityThreshold,
+            ':brandFuzzyThreshold' => $this->brandFuzzyThreshold,
         ];
 
         foreach ($existingIds as $i => $id) {
@@ -57,6 +59,33 @@ class GapAnalysisService extends Component
                 SELECT 1 FROM {{%keywords}} e
                 WHERE e.source_id IN ({$existingList})
                   AND similarity(a.normalized_text, e.normalized_text) > :simThreshold
+              )
+              AND (
+                -- Own brand match overrides competitor exclusion
+                EXISTS (
+                    SELECT 1 FROM {{%brand_terms}} bt
+                    WHERE bt.is_own_brand = true
+                      AND LOWER(a.normalized_text) LIKE '%' || LOWER(bt.term) || '%'
+                )
+                OR (
+                    -- No exact competitor brand match
+                    NOT EXISTS (
+                        SELECT 1 FROM {{%brand_terms}} bt
+                        WHERE bt.is_own_brand = false
+                          AND LOWER(a.normalized_text) LIKE '%' || LOWER(bt.term) || '%'
+                    )
+                    -- AND no fuzzy competitor brand match (word-level)
+                    AND NOT EXISTS (
+                        SELECT 1 FROM {{%brand_terms}} bt
+                        WHERE bt.is_own_brand = false
+                          AND EXISTS (
+                              SELECT 1
+                              FROM regexp_split_to_table(LOWER(a.normalized_text), E'\\\\s+') AS word
+                              WHERE word != ''
+                                AND similarity(word, LOWER(bt.term)) >= :brandFuzzyThreshold
+                          )
+                    )
+                )
               )
             ORDER BY a.volume DESC NULLS LAST
             LIMIT 500

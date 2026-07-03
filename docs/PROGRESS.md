@@ -212,7 +212,8 @@
 | VolumeFilterService | `VolumeFilterServiceTest.php` | 2 |
 | ClassificationService | `ClassificationServiceTest.php` | 35 |
 | LoginForm | `LoginFormTest.php` | 3 |
-| **Итого** | | **85 тестов, 165 assertions** |
+| GapAnalysisService | `GapAnalysisServiceTest.php` | 6 |
+| **Итого** | | **91 тест, 178 assertions** |
 
 ### Статический анализ
 - [x] PHPStan level 5 — **0 errors**
@@ -225,7 +226,8 @@
 ImportJob (upsert, hash idempotency)
   → CleanJob (normalize + detect language + clean + dedup + volume filter)
     → ClassificationJob (classify ALL keywords, set READY only for cleaned)
-      → Keywords ready for Gap Analysis / Grouping / Export
+      → GapAnalysisService (brand-filtered ahrefs_paid MINUS gads ∪ sc via pg_trgm)
+      → Grouping / Export
 ```
 
 ---
@@ -234,12 +236,13 @@ ImportJob (upsert, hash idempotency)
 
 ### Gap Analysis Service + UI
 
-- **GapAnalysisService** (`common/components/pipeline/GapAnalysisService.php`): `analysis()` with pg_trgm `similarity()` in `NOT EXISTS` subquery — Ahrefs Paid keywords minus (GAds OR Search Console), filtered by `volume >= minVolume`; fuzzy brand exclusion via `CleaningService::checkBrandFuzzy()`
+- **GapAnalysisService** (`common/components/pipeline/GapAnalysisService.php`): `analysis()` with pg_trgm `similarity()` in `NOT EXISTS` subquery — Ahrefs Paid keywords minus (GAds OR Search Console), filtered by `volume >= minVolume`; brand exclusion via exact `str_contains` + word-level fuzzy match against `brand_terms` (`is_own_brand = false`), own-brand override via `is_own_brand = true`
+- **Bugfix (brand filter):** Gap analysis previously selected ALL ahrefs_paid keywords without brand check, so competitor-brand keywords ("wix конструктор", "tilda конструктор") appeared as gap candidates despite being rejected in the pipeline. Fixed by adding inline brand check matching `CleaningService` logic — own brand exact match overrides competitor exclusion; competitor brand exact/fuzzy match excludes from gap pool.
 - **GapAnalysisController** (`backend/controllers/GapAnalysisController.php`): `actionIndex()` renders GridView with category/intent grouping
 - **View** (`backend/views/gap-analysis/index.php`): sortable GridView, pagination 50/page, category/intent grouping disambiguation, `language` badge, volume totals per group
 - **Navbar**: "Gap Analysis" link with `bi-graph-up-arrow` icon
-- **i18n**: keys `gap.title`, `gap.candidates`, `gap.no_candidates`, `gap.category`, `gap.intent`, `gap.volume`, `gap.language`, `gap.ahrefs_only`, `gap.keyword`, `nav.gap_analysis` in both en + ru
-- **Tests**: 5 tests — gap candidate found, existing keyword excluded, fuzzy match excluded, low-volume filtered, result structure
+- **i18n**: keys `gap.*` and `nav.gap_analysis` in both en + ru
+- **Tests**: 6 tests — gap candidate found, existing keyword excluded, fuzzy match excluded, low-volume filtered, competitor brand excluded (regression for "wix конструктор"/"tilda конструктор"), result structure
 
 ## Что не реализовано (из BRIEF.md §§3–4)
 
