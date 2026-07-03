@@ -58,14 +58,19 @@ class SiteController extends Controller
         ];
     }
 
-    /**
-     * Displays homepage.
-     *
-     * @return string
-     */
     public function actionIndex(): string
     {
-        return $this->render('index');
+        $importBatchesCount = \common\models\ImportBatch::find()->count();
+        $keywordsTotal = \common\models\Keyword::find()->count();
+        $keywordsReady = \common\models\Keyword::find()->where(['status' => \common\models\Keyword::STATUS_READY])->count();
+        $keywordsRaw = \common\models\Keyword::find()->where(['status' => \common\models\Keyword::STATUS_RAW])->count();
+        $keywordsCleaned = \common\models\Keyword::find()->where(['status' => \common\models\Keyword::STATUS_CLEANED])->count();
+        $keywordsRejected = \common\models\Keyword::find()->where(['status' => \common\models\Keyword::STATUS_REJECTED])->count();
+
+        return $this->render('index', compact(
+            'importBatchesCount', 'keywordsTotal', 'keywordsReady',
+            'keywordsRaw', 'keywordsCleaned', 'keywordsRejected',
+        ));
     }
 
     /**
@@ -86,9 +91,7 @@ class SiteController extends Controller
     }
 
     /**
-     * Login action.
-     *
-     * @return string|Response
+     * Set language action.
      */
     public function actionSetLanguage(string $lang): Response
     {

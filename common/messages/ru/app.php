@@ -50,9 +50,18 @@ return [
     'dashboard.title' => 'Панель управления',
     'dashboard.welcome' => 'С возвращением, {username}',
     'dashboard.description' => 'Панель управления платформой ключевых слов.',
+    'dashboard.imports' => 'Импортов',
+    'dashboard.ready' => 'Готово',
+    'dashboard.total_keywords' => 'Всего ключей',
+    'dashboard.rejected' => 'Отклонено',
+    'dashboard.quick_actions' => 'Быстрые действия',
+    'dashboard.pipeline_status' => 'Статус пайплайна',
+    'dashboard.view_batches' => 'Все импорты',
 
     // Nav
     'nav.home' => 'Главная',
+    'nav.import' => 'Импорт',
+    'nav.keywords' => 'Ключевые слова',
     'nav.login' => 'Вход',
     'nav.logout' => 'Выход ({username})',
     'nav.toggle_dark' => 'Переключить тему',
@@ -74,6 +83,7 @@ return [
 
     // Import
     'import.title' => 'Импорт ключевых слов',
+    'import.batches' => 'Импорт — история',
     'import.upload' => 'Загрузить файл',
     'import.source_type' => 'Тип источника',
     'import.select_source' => 'Выберите источник...',
@@ -93,6 +103,8 @@ return [
     'import.total' => 'Всего',
     'import.accepted' => 'Принято',
     'import.rejected' => 'Отклонено',
+    'import.imported_at' => 'Импортирован',
+    'import.view_batches' => 'История импортов',
     'import.source.gads' => 'Google Ads',
     'import.source.search_console' => 'Search Console',
     'import.source.ahrefs_organic' => 'Ahrefs Organic',
@@ -117,6 +129,24 @@ return [
     'clean.checked_brand' => 'Проверка бренда',
     'clean.checked_forbidden' => 'Проверка запрещённых',
     'clean.checked_already_used' => 'Проверка на использование',
+
+    // Statuses
+    'status.raw' => 'Сырые',
+    'status.cleaned' => 'Очищенные',
+    'status.rejected' => 'Отклонённые',
+    'status.ready' => 'Готовые',
+
+    // Keywords
+    'keywords.title' => 'Ключевые слова',
+    'keywords.keyword' => 'Ключевое слово',
+    'keywords.language' => 'Язык',
+    'keywords.volume' => 'Объём',
+    'keywords.category' => 'Категория',
+    'keywords.intent' => 'Интент',
+    'keywords.audience' => 'Аудитория',
+    'keywords.rejection_reason' => 'Причина отклонения',
+    'keywords.override' => 'Изменить',
+    'keywords.override_done' => 'Статус обновлён.',
 
     // Classification
     'class.title' => 'Классификация ключевых слов',

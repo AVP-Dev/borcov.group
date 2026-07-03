@@ -131,3 +131,25 @@
 
 ### Деплой на реальный URL
 - [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login работает, дашборд открывается, нет 500
+
+---
+
+## Фаза 4: Admin UI — Dashboard, Import & Keyword Management
+
+### Создано
+- [x] `backend/controllers/ImportController.php` — actions: index (upload form), upload (process file), batches (batch list)
+- [x] `backend/views/import/index.php` — upload form with source selector + file input
+- [x] `backend/views/import/batches.php` — GridView: all import batches with source/status/counts
+- [x] `backend/controllers/KeywordController.php` — actions: index (filterable GridView), override (admin status change)
+- [x] `backend/views/keyword/index.php` — GridView with filters (source/status/category/intent/search), override dropdown with JS
+- [x] Navbar обновлен: Import, Keywords ссылки для authenticated users
+- [x] Dashboard (`backend/views/site/index.php`): реальные stats (imports, ready, total, rejected) + pipeline status breakdown + quick actions
+
+### i18n
+- [x] 20+ новых ключей (en/ru): dashboard.* (stats/actions), nav.* (Import/Keywords), status.*, keywords.* (фильтры/колонки/override)
+
+### Статический анализ
+- [x] PHPStan level 5 — 0 ошибок
+
+### Деплой на реальный URL
+- [ ] **Ожидает деплоя**

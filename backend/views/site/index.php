@@ -3,29 +3,98 @@
 declare(strict_types=1);
 
 /** @var yii\web\View $this */
+/** @var int $importBatchesCount */
+/** @var int $keywordsTotal */
+/** @var int $keywordsReady */
+/** @var int $keywordsRaw */
+/** @var int $keywordsCleaned */
+/** @var int $keywordsRejected */
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 $this->title = Yii::t('app', 'dashboard.title');
 $username = Yii::$app->user->identity?->username;
 ?>
 <div class="site-index">
-    <!-- Welcome banner -->
     <div class="dashboard-banner text-white rounded-4 p-4 p-lg-5 mb-4">
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <h1 class="fw-bold mb-2"><?= Yii::t('app', 'dashboard.welcome', ['username' => Html::encode($username)]) ?></h1>
-                <p class="opacity-75 mb-0">
-                    <?= Yii::t('app', 'dashboard.description') ?>
-                </p>
+                <p class="opacity-75 mb-0"><?= Yii::t('app', 'dashboard.description') ?></p>
             </div>
-            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                <?= Html::img(
-                    Yii::getAlias('@web/images/yii3_full_white_for_dark.svg'),
-                    [
-                        'alt' => 'Yii Framework', 'height' => 48,
-                    ],
-                ) ?>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 fw-bold text-primary"><?= $importBatchesCount ?></div>
+                    <div class="text-muted small"><?= Yii::t('app', 'dashboard.imports') ?></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 fw-bold text-success"><?= $keywordsReady ?></div>
+                    <div class="text-muted small"><?= Yii::t('app', 'dashboard.ready') ?></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 fw-bold text-warning"><?= $keywordsTotal ?></div>
+                    <div class="text-muted small"><?= Yii::t('app', 'dashboard.total_keywords') ?></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 fw-bold text-danger"><?= $keywordsRejected ?></div>
+                    <div class="text-muted small"><?= Yii::t('app', 'dashboard.rejected') ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent fw-semibold"><?= Yii::t('app', 'dashboard.quick_actions') ?></div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <?= Html::a(Yii::t('app', 'import.title'), ['/import/index'], ['class' => 'btn btn-primary']) ?>
+                        <?= Html::a(Yii::t('app', 'keywords.title'), ['/keyword/index'], ['class' => 'btn btn-outline-secondary']) ?>
+                        <?= Html::a(Yii::t('app', 'dashboard.view_batches'), ['/import/batches'], ['class' => 'btn btn-outline-secondary']) ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent fw-semibold"><?= Yii::t('app', 'dashboard.pipeline_status') ?></div>
+                <div class="card-body">
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span><?= Yii::t('app', 'status.raw') ?></span>
+                        <span class="badge bg-secondary"><?= $keywordsRaw ?></span>
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span><?= Yii::t('app', 'status.cleaned') ?></span>
+                        <span class="badge bg-info"><?= $keywordsCleaned ?></span>
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span><?= Yii::t('app', 'status.ready') ?></span>
+                        <span class="badge bg-success"><?= $keywordsReady ?></span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span><?= Yii::t('app', 'status.rejected') ?></span>
+                        <span class="badge bg-danger"><?= $keywordsRejected ?></span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

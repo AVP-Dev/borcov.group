@@ -50,9 +50,18 @@ return [
     'dashboard.title' => 'Dashboard',
     'dashboard.welcome' => 'Welcome back, {username}',
     'dashboard.description' => 'This is your administration panel. Manage your platform from here.',
+    'dashboard.imports' => 'Imports',
+    'dashboard.ready' => 'Ready',
+    'dashboard.total_keywords' => 'Total Keywords',
+    'dashboard.rejected' => 'Rejected',
+    'dashboard.quick_actions' => 'Quick Actions',
+    'dashboard.pipeline_status' => 'Pipeline Status',
+    'dashboard.view_batches' => 'View All Batches',
 
     // Nav
     'nav.home' => 'Home',
+    'nav.import' => 'Import',
+    'nav.keywords' => 'Keywords',
     'nav.login' => 'Login',
     'nav.logout' => 'Logout ({username})',
     'nav.toggle_dark' => 'Toggle dark mode',
@@ -74,6 +83,7 @@ return [
 
     // Import
     'import.title' => 'Import Keywords',
+    'import.batches' => 'Import Batches',
     'import.upload' => 'Upload File',
     'import.source_type' => 'Source Type',
     'import.select_source' => 'Select source...',
@@ -93,6 +103,8 @@ return [
     'import.total' => 'Total',
     'import.accepted' => 'Accepted',
     'import.rejected' => 'Rejected',
+    'import.imported_at' => 'Imported At',
+    'import.view_batches' => 'View Import Batches',
     'import.source.gads' => 'Google Ads',
     'import.source.search_console' => 'Search Console',
     'import.source.ahrefs_organic' => 'Ahrefs Organic',
@@ -117,6 +129,24 @@ return [
     'clean.checked_brand' => 'Brand check',
     'clean.checked_forbidden' => 'Forbidden check',
     'clean.checked_already_used' => 'Already-used check',
+
+    // Statuses
+    'status.raw' => 'Raw',
+    'status.cleaned' => 'Cleaned',
+    'status.rejected' => 'Rejected',
+    'status.ready' => 'Ready',
+
+    // Keywords
+    'keywords.title' => 'Keywords',
+    'keywords.keyword' => 'Keyword',
+    'keywords.language' => 'Language',
+    'keywords.volume' => 'Volume',
+    'keywords.category' => 'Category',
+    'keywords.intent' => 'Intent',
+    'keywords.audience' => 'Audience',
+    'keywords.rejection_reason' => 'Rejection Reason',
+    'keywords.override' => 'Override',
+    'keywords.override_done' => 'Status updated successfully.',
 
     // Classification
     'class.title' => 'Classify Keywords',

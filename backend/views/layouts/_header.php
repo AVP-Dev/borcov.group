@@ -15,12 +15,22 @@ $items = [
         'url' => ['/site/index'],
     ],
     [
+        'label' => Yii::t('app', 'nav.import'),
+        'url' => ['/import/index'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
+        'label' => Yii::t('app', 'nav.keywords'),
+        'url' => ['/keyword/index'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
         'label' => Yii::t('app', 'nav.login'),
         'url' => ['/site/login'],
         'visible' => Yii::$app->user->isGuest,
     ],
     [
-        'label' => Yii::t('app', 'nav.logout', ['username' => Html::encode(Yii::$app->user->identity?->username ?? '')]),
+        'label' => Yii::t('app', 'nav.logout', ['username' => Html::encode(Yii::$app->user->identity->username ?? '')]),
         'url' => ['/site/logout'],
         'linkOptions' => [
             'data-method' => 'post',
