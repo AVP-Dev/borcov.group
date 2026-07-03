@@ -7,6 +7,10 @@ declare(strict_types=1);
  * @var \yii\data\ActiveDataProvider $historyProvider
  * @var array<int, array{group: \common\models\AdGroup, total: int, draft: int, exported: int}> $groupStats
  * @var array<int, \common\models\Ad[]> $groupAds
+ * @var string $filterCategory
+ * @var string $filterLanguage
+ * @var array<string, string> $categoryOptions
+ * @var array<string, string> $languageOptions
  */
 
 use common\models\Ad;
@@ -37,6 +41,27 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <?= Html::beginForm(['create'], 'post', ['id' => 'export-form']) ?>
                 <?= Html::beginForm(['reset'], 'post', ['id' => 'reset-form', 'style' => 'display:none']) ?>
+
+                <!-- Filters -->
+                <?= Html::beginForm(['index'], 'get', ['class' => 'row g-2 mb-3 align-items-end', 'id' => 'filter-form']) ?>
+                    <div class="col-auto">
+                        <?= Html::dropDownList('category', $filterCategory, ['' => Yii::t('app', 'export.filter_all_categories')] + $categoryOptions, [
+                            'class' => 'form-select form-select-sm',
+                            'onchange' => 'this.form.submit()',
+                        ]) ?>
+                    </div>
+                    <div class="col-auto">
+                        <?= Html::dropDownList('language', $filterLanguage, ['' => Yii::t('app', 'export.filter_all_languages')] + $languageOptions, [
+                            'class' => 'form-select form-select-sm',
+                            'onchange' => 'this.form.submit()',
+                        ]) ?>
+                    </div>
+                    <?php if ($filterCategory !== '' || $filterLanguage !== ''): ?>
+                        <div class="col-auto">
+                            <?= Html::a(Yii::t('app', 'export.clear_filters'), ['index'], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+                        </div>
+                    <?php endif; ?>
+                <?= Html::endForm() ?>
 
                 <div class="mb-3 d-flex gap-2 flex-wrap">
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="select-all"><?= Yii::t('app', 'export.select_all') ?></button>

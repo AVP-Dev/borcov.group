@@ -261,4 +261,7 @@ return [
     'export.toggle_ads' => 'Показать/скрыть объявления',
     'export.status_draft' => 'Черновик',
     'export.status_exported' => 'Экспортировано',
+    'export.filter_all_categories' => 'Все категории',
+    'export.filter_all_languages' => 'Все языки',
+    'export.clear_filters' => 'Сбросить',
 ];

@@ -261,4 +261,7 @@ return [
     'export.toggle_ads' => 'Show/hide ads',
     'export.status_draft' => 'Draft',
     'export.status_exported' => 'Exported',
+    'export.filter_all_categories' => 'All categories',
+    'export.filter_all_languages' => 'All languages',
+    'export.clear_filters' => 'Clear',
 ];

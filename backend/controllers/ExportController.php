@@ -7,8 +7,10 @@ namespace backend\controllers;
 use common\components\pipeline\ExportService;
 use common\models\Ad;
 use common\models\ExportBatch;
+use common\models\Keyword;
 use Yii;
 use yii\data\ActiveDataProvider;
+use yii\helpers\ArrayHelper;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -30,6 +32,9 @@ class ExportController extends Controller
 
     public function actionIndex(): string
     {
+        $filterCategory = Yii::$app->request->get('category', '');
+        $filterLanguage = Yii::$app->request->get('language', '');
+
         $historyProvider = new ActiveDataProvider([
             'query' => ExportBatch::find()->orderBy(['id' => SORT_DESC]),
             'pagination' => ['pageSize' => 20],
@@ -37,19 +42,56 @@ class ExportController extends Controller
 
         $groupStats = ExportService::getGroupedStats();
 
+        // Apply filters
+        $filteredStats = [];
+        foreach ($groupStats as $groupId => $stats) {
+            $group = $stats['group'];
+            if ($filterCategory !== '' && $group->category !== $filterCategory) {
+                continue;
+            }
+            if ($filterLanguage !== '' && $group->language !== $filterLanguage) {
+                continue;
+            }
+            $filteredStats[$groupId] = $stats;
+        }
+
         // Load ads for each group (for expandable rows)
         $groupAds = [];
-        foreach ($groupStats as $groupId => $stats) {
+        foreach ($filteredStats as $groupId => $stats) {
             $groupAds[$groupId] = Ad::find()
                 ->where(['ad_group_id' => $groupId])
                 ->orderBy(['status' => SORT_ASC, 'id' => SORT_ASC])
                 ->all();
         }
 
+        // Available categories/languages for filter dropdowns
+        $categories = [];
+        $languages = [];
+        foreach ($groupStats as $stats) {
+            $g = $stats['group'];
+            $categories[$g->category] = $g->category;
+            $languages[$g->language] = $g->language;
+        }
+        $categoryLabels = [
+            Keyword::CATEGORY_WEBSITE_BUILDER => Yii::t('app', 'class.category.website_builder'),
+            Keyword::CATEGORY_EMAIL => Yii::t('app', 'class.category.email'),
+            Keyword::CATEGORY_DOMAINS => Yii::t('app', 'class.category.domains'),
+            Keyword::CATEGORY_ACCOUNTING => Yii::t('app', 'class.category.accounting'),
+            Keyword::CATEGORY_INVOICING => Yii::t('app', 'class.category.invoicing'),
+            Keyword::CATEGORY_RESELLER => Yii::t('app', 'class.category.reseller'),
+            Keyword::CATEGORY_GENERAL_BRAND => Yii::t('app', 'class.category.general_brand'),
+        ];
+        $categoryOptions = array_map(fn($c) => $categoryLabels[$c] ?? $c, $categories);
+        $languageOptions = array_map('strtoupper', $languages);
+
         return $this->render('index', [
             'historyProvider' => $historyProvider,
-            'groupStats' => $groupStats,
+            'groupStats' => $filteredStats,
             'groupAds' => $groupAds,
+            'filterCategory' => $filterCategory,
+            'filterLanguage' => $filterLanguage,
+            'categoryOptions' => $categoryOptions,
+            'languageOptions' => $languageOptions,
         ]);
     }
 
