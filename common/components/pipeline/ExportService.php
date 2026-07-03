@@ -11,7 +11,11 @@ use Yii;
 
 class ExportService
 {
-    private const string CAMPAIGN_PREFIX = 'site.pro';
+    private function getCampaignPrefix(): string
+    {
+        $config = require Yii::getAlias('@common/config/ad_generation.php');
+        return $config['brand_name'] ?? 'site.pro';
+    }
 
     /**
      * Export all ads from selected ad groups.
@@ -122,7 +126,7 @@ class ExportService
                 continue;
             }
 
-            $campaignName = self::CAMPAIGN_PREFIX . ' — ' . $group->category
+            $campaignName = $this->getCampaignPrefix() . ' — ' . $group->category
                 . ' — ' . $group->audience_segment
                 . ' — ' . $group->language;
 
