@@ -30,7 +30,7 @@ services:
       POSTGRES_USER: ${DB_USER:-yii2}
       POSTGRES_PASSWORD: ${DB_PASS:-secret}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      test: ["CMD-SHELL", "pgrep -x postgres > /dev/null && pg_isready -q -h localhost > /dev/null 2>&1 || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 10
