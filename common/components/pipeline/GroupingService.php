@@ -87,6 +87,11 @@ class GroupingService
             if ($this->generator !== null) {
                 $currentAdCount = $group->getAds()->count();
                 if ($currentAdCount < self::ADS_PER_GROUP) {
+                    // Сначала удалить все существующие объявления, если есть
+                    // чтобы избежать накопления при повторных запусках
+                    if ($currentAdCount > 0) {
+                        \common\models\Ad::deleteAll(['ad_group_id' => $group->id]);
+                    }
                     $firstKw = Keyword::findOne($keywordIds[0]);
                     if ($firstKw !== null) {
                         $adsGenerated += $this->generateAds($group, $firstKw);

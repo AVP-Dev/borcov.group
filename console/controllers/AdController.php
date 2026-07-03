@@ -4,32 +4,58 @@ declare(strict_types=1);
 
 namespace console\controllers;
 
-use common\components\pipeline\GroupingService;
-use common\components\pipeline\TemplateAdGenerator;
 use common\models\Ad;
 use common\models\AdGroup;
 use Yii;
 use yii\console\Controller;
+use yii\console\ExitCode;
 
+/**
+ * Ad management commands.
+ */
 class AdController extends Controller
 {
-    public function actionFillMissing(): void
+    private const int MAX_ADS_PER_GROUP = 3;
+
+    /**
+     * Deduplicate ads: keep only the 3 most recent ads per group, delete extras.
+     */
+    public function actionFixDuplicates(): int
     {
         $groups = AdGroup::find()->all();
-        $fixed = 0;
+        $totalDeleted = 0;
+        $fixedGroups = 0;
 
         foreach ($groups as $group) {
-            $count = $group->getAds()->count();
-            if ($count >= 3) {
+            $ads = Ad::find()
+                ->where(['ad_group_id' => $group->id])
+                ->orderBy(['id' => SORT_ASC])
+                ->all();
+
+            $count = count($ads);
+            if ($count <= self::MAX_ADS_PER_GROUP) {
                 continue;
             }
-            $this->stdout("Group #{$group->id} \"{$group->theme_label}\": {$count} ads, regenerating...\n");
-            $service = new GroupingService(new TemplateAdGenerator());
-            $created = $service->regenerateForGroup((int)$group->id);
-            $this->stdout("  -> {$created} ads created\n");
-            $fixed++;
+
+            // Keep the newest MAX_ADS_PER_GROUP ads (last ones by id)
+            $toDelete = array_slice($ads, 0, $count - self::MAX_ADS_PER_GROUP);
+            $deletedIds = [];
+            foreach ($toDelete as $ad) {
+                $deletedIds[] = $ad->id;
+                $ad->delete();
+            }
+
+            $totalDeleted += count($toDelete);
+            $fixedGroups++;
+            $this->stdout("Group #{$group->id} ({$group->theme_label}): {$count} ads → kept " . self::MAX_ADS_PER_GROUP . ", deleted " . count($toDelete) . " (IDs: " . implode(', ', $deletedIds) . ")\n");
         }
 
-        $this->stdout("Done. {$fixed} groups fixed.\n");
+        if ($totalDeleted === 0) {
+            $this->stdout("All groups have " . self::MAX_ADS_PER_GROUP . " or fewer ads. Nothing to fix.\n");
+        } else {
+            $this->stdout("Fixed {$fixedGroups} groups, deleted {$totalDeleted} duplicate ads.\n");
+        }
+
+        return ExitCode::OK;
     }
 }
