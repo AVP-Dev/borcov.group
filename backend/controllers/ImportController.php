@@ -38,6 +38,17 @@ class ImportController extends Controller
 
     public function actionUpload(): \yii\web\Response
     {
+        try {
+            return $this->handleUpload();
+        } catch (\Throwable $e) {
+            Yii::error("Import upload failed: " . $e->getMessage() . "\n" . $e->getTraceAsString(), __METHOD__);
+            Yii::$app->session->setFlash('error', Yii::t('app', 'import.error.internal'));
+            return $this->redirect(['/import/index']);
+        }
+    }
+
+    private function handleUpload(): \yii\web\Response
+    {
         $request = Yii::$app->request;
         $sourceId = (int)$request->post('source_id');
         $source = Source::findOne($sourceId);
@@ -78,18 +89,12 @@ class ImportController extends Controller
         }
 
         $service = new ImportService();
-        try {
-            $batch = $service->import($filePath, $source->type);
-            if ($batch->isNewRecord === false && $batch->status === ImportBatch::STATUS_DONE) {
-                Yii::$app->session->setFlash('info', Yii::t('app', 'import.duplicate_hash'));
-                return $this->redirect(['/import/batches']);
-            }
-            Yii::$app->session->setFlash('success', Yii::t('app', 'import.started'));
-        } catch (\Throwable $e) {
-            Yii::$app->session->setFlash('error', $e->getMessage());
-            return $this->redirect(['/import/index']);
+        $batch = $service->import($filePath, $source->type);
+        if ($batch->isNewRecord === false && $batch->status === ImportBatch::STATUS_DONE) {
+            Yii::$app->session->setFlash('info', Yii::t('app', 'import.duplicate_hash'));
+            return $this->redirect(['/import/batches']);
         }
-
+        Yii::$app->session->setFlash('success', Yii::t('app', 'import.started'));
         return $this->redirect(['/import/batches']);
     }
 

@@ -101,6 +101,7 @@ return [
     'import.error.invalid_file' => 'Invalid or unreadable file',
     'import.error.invalid_extension' => 'Only .csv and .json files are allowed',
     'import.error.file_too_large' => 'File exceeds maximum size ({size})',
+    'import.error.internal' => 'An internal error occurred. The error has been logged.',
     'import.error.no_keywords' => 'No valid keywords found in file',
     'import.status.processing' => 'Processing',
     'import.status.done' => 'Done',
