@@ -63,7 +63,7 @@ class ImportJob extends BaseObject implements JobInterface
             }
 
             $normalizedText = $this->normalizeText($rawText);
-            $volume = isset($row['volume']) ? (int)$row['volume'] : null;
+            $volume = $this->parseVolume($row['volume'] ?? null);
 
             $now = time();
             try {
@@ -169,4 +169,29 @@ class ImportJob extends BaseObject implements JobInterface
         $batch->save();
     }
 
+    /**
+     * Parse volume string into nullable integer.
+     * Handles: "1,200", "12 500", "1.2K", "1.5M", "N/A", "-", ""
+     */
+    private function parseVolume(?string $raw): ?int
+    {
+        if ($raw === null || $raw === '' || $raw === '-' || strtoupper($raw) === 'N/A') {
+            return null;
+        }
+
+        $val = str_replace([',', ' ', '_'], '', $raw);
+
+        if (preg_match('/^(\d+(\.\d+)?)\s*([kKmM])?$/', $val, $m)) {
+            $num = (float)$m[1];
+            if (isset($m[3])) {
+                $mult = strtolower($m[3]) === 'k' ? 1000 : 1000000;
+                $num *= $mult;
+            }
+            return (int)round($num);
+        }
+
+        // Fallback: try direct integer cast
+        $int = (int)$raw;
+        return $int === 0 && $raw !== '0' ? null : $int;
+    }
 }

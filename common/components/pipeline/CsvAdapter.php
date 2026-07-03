@@ -32,6 +32,12 @@ class CsvAdapter extends BaseObject implements SourceAdapterInterface
                 throw new \RuntimeException('Cannot read CSV header');
             }
             $header = array_map('trim', $header);
+
+            // Strip UTF-8 BOM from first column
+            if (isset($header[0])) {
+                $bom = \pack('H*', 'EFBBBF');
+                $header[0] = preg_replace("/^$bom/", '', $header[0]);
+            }
         }
 
         $lcHeader = $header ? array_map('mb_strtolower', $header) : [];

@@ -98,6 +98,21 @@ $this->registerJs('
                 'format' => 'raw',
                 'contentOptions' => fn($model) => ['data-utc-time' => $model->imported_at],
             ],
+            [
+                'class' => \yii\grid\ActionColumn::class,
+                'template' => '{delete}',
+                'buttons' => [
+                    'delete' => fn($url, \common\models\ImportBatch $model) => Html::a(
+                        Yii::t('app', 'import.delete_btn'),
+                        ['delete-batch', 'id' => $model->id],
+                        [
+                            'class' => 'btn btn-sm btn-outline-danger',
+                            'data-method' => 'post',
+                            'data-confirm' => Yii::t('app', 'import.delete_confirm', ['file' => $model->filename]),
+                        ],
+                    ),
+                ],
+            ],
         ],
     ]) ?>
 </div>
