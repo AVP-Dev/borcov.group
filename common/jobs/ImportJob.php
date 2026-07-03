@@ -12,6 +12,7 @@ use common\models\Keyword;
 use common\components\pipeline\SourceAdapterInterface;
 use common\components\pipeline\CsvAdapter;
 use common\components\pipeline\JsonAdapter;
+use common\jobs\CleanJob;
 
 class ImportJob extends BaseObject implements JobInterface
 {
@@ -81,6 +82,10 @@ class ImportJob extends BaseObject implements JobInterface
         $batch->rows_rejected = $rejected;
         $batch->status = ImportBatch::STATUS_DONE;
         $batch->save();
+
+        Yii::$app->queue->push(new CleanJob([
+            'batchId' => (int)$batch->id,
+        ]));
     }
 
     private function createAdapter(string $sourceType): SourceAdapterInterface
