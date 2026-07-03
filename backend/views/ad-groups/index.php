@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <?= Html::a(
                 Yii::t('app', 'ad_groups.generate_btn'),
                 ['generate'],
-                ['class' => 'btn btn-primary', 'data-method' => 'post'],
+                ['class' => 'btn btn-primary', 'data-method' => 'post', 'id' => 'generate-all-btn'],
             ) ?>
         </div>
     </div>
@@ -60,3 +60,12 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]) ?>
 </div>
+
+<?php
+$this->registerJs(<<<JS
+document.getElementById('generate-all-btn')?.addEventListener('click', function(e) {
+    this.classList.add('disabled');
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> ' + this.textContent.trim();
+});
+JS);
+?>
