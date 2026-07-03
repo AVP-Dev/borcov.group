@@ -290,4 +290,5 @@ return [
     'settings.term_required' => 'Term is required.',
     'settings.term_placeholder' => 'Enter term...',
     'settings.delete_confirm' => 'Delete this term?',
+    'settings.category_urls' => 'Category URLs',
 ];

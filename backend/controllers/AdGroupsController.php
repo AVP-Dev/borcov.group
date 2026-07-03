@@ -31,14 +31,49 @@ class AdGroupsController extends Controller
 
     public function actionIndex(): string
     {
+        $filterCategory = Yii::$app->request->get('category', '');
+        $filterLanguage = Yii::$app->request->get('language', '');
+
+        $query = AdGroup::find()->with('keywords')->orderBy(['theme_label' => SORT_ASC]);
+
+        if ($filterCategory !== '') {
+            $query->andWhere(['category' => $filterCategory]);
+        }
+        if ($filterLanguage !== '') {
+            $query->andWhere(['language' => $filterLanguage]);
+        }
+
         $dataProvider = new ActiveDataProvider([
-            'query' => AdGroup::find()->with('keywords')->orderBy(['theme_label' => SORT_ASC]),
+            'query' => $query,
             'pagination' => ['pageSize' => 50],
         ]);
+
+        // Available options for filter dropdowns
+        $categories = AdGroup::find()->select('category')->distinct()->column();
+        $languages = AdGroup::find()->select('language')->distinct()->column();
+
+        $categoryLabels = [
+            Keyword::CATEGORY_WEBSITE_BUILDER => Yii::t('app', 'class.category.website_builder'),
+            Keyword::CATEGORY_EMAIL => Yii::t('app', 'class.category.email'),
+            Keyword::CATEGORY_DOMAINS => Yii::t('app', 'class.category.domains'),
+            Keyword::CATEGORY_ACCOUNTING => Yii::t('app', 'class.category.accounting'),
+            Keyword::CATEGORY_INVOICING => Yii::t('app', 'class.category.invoicing'),
+            Keyword::CATEGORY_RESELLER => Yii::t('app', 'class.category.reseller'),
+            Keyword::CATEGORY_GENERAL_BRAND => Yii::t('app', 'class.category.general_brand'),
+        ];
+        $catOptions = [];
+        foreach ($categories as $c) {
+            $catOptions[$c] = $categoryLabels[$c] ?? $c;
+        }
+        $langOptions = array_combine($languages, array_map('strtoupper', $languages));
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
             'deepseekAvailable' => $this->isDeepSeekAvailable(),
+            'filterCategory' => $filterCategory,
+            'filterLanguage' => $filterLanguage,
+            'categoryOptions' => $catOptions,
+            'languageOptions' => $langOptions,
         ]);
     }
 

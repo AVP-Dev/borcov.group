@@ -290,4 +290,5 @@ return [
     'settings.term_required' => 'Термин обязателен.',
     'settings.term_placeholder' => 'Введите термин...',
     'settings.delete_confirm' => 'Удалить этот термин?',
+    'settings.category_urls' => 'URL категорий',
 ];

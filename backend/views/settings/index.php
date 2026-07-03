@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @var string $volumeMin
  * @var string $volumeSources
  * @var string $dedupThreshold
+ * @var array<string, array{label: string, url: string}> $categoryUrls
  */
 
 use common\models\BrandTerm;
@@ -43,6 +44,26 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= Html::input('number', 'dedup_threshold', $dedupThreshold, ['class' => 'form-control form-control-sm', 'min' => 0.1, 'max' => 1, 'step' => 0.05]) ?>
                         </div>
                         <div class="col-12 mt-3">
+                            <?= Html::submitButton(Yii::t('app', 'app.save'), ['class' => 'btn btn-primary btn-sm']) ?>
+                        </div>
+                    <?= Html::endForm() ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category URLs -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header fw-semibold"><?= Yii::t('app', 'settings.category_urls') ?></div>
+                <div class="card-body">
+                    <?= Html::beginForm(['save-urls'], 'post', ['class' => 'row g-2']) ?>
+                        <?php foreach ($categoryUrls as $catKey => $catInfo): ?>
+                            <div class="col-md-6">
+                                <label class="small text-muted"><?= Html::encode($catInfo['label']) ?></label>
+                                <?= Html::textInput("url[$catKey]", $catInfo['url'], ['class' => 'form-control form-control-sm']) ?>
+                            </div>
+                        <?php endforeach; ?>
+                        <div class="col-12 mt-2">
                             <?= Html::submitButton(Yii::t('app', 'app.save'), ['class' => 'btn btn-primary btn-sm']) ?>
                         </div>
                     <?= Html::endForm() ?>

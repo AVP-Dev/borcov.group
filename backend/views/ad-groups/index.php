@@ -45,6 +45,26 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 
+    <?= Html::beginForm(['index'], 'get', ['class' => 'row g-2 mb-3 align-items-end']) ?>
+        <div class="col-auto">
+            <?= Html::dropDownList('category', Yii::$app->request->get('category', ''), ['' => Yii::t('app', 'export.filter_all_categories')] + ($categoryOptions ?? []), [
+                'class' => 'form-select form-select-sm',
+                'onchange' => 'this.form.submit()',
+            ]) ?>
+        </div>
+        <div class="col-auto">
+            <?= Html::dropDownList('language', Yii::$app->request->get('language', ''), ['' => Yii::t('app', 'export.filter_all_languages')] + ($languageOptions ?? []), [
+                'class' => 'form-select form-select-sm',
+                'onchange' => 'this.form.submit()',
+            ]) ?>
+        </div>
+        <?php if (Yii::$app->request->get('category') || Yii::$app->request->get('language')): ?>
+            <div class="col-auto">
+                <?= Html::a(Yii::t('app', 'export.clear_filters'), ['index'], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+            </div>
+        <?php endif; ?>
+    <?= Html::endForm() ?>
+
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         'columns' => [

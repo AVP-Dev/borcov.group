@@ -6,6 +6,7 @@ namespace backend\controllers;
 
 use common\models\BrandTerm;
 use common\models\ForbiddenTerm;
+use common\models\Keyword;
 use common\models\Setting;
 use Yii;
 use yii\data\ActiveDataProvider;
@@ -43,12 +44,31 @@ class SettingsController extends Controller
         $volumeSources = Setting::get('pipeline.volume.min_source_count', '3');
         $dedupThreshold = Setting::get('pipeline.dedup.similarity_threshold', '0.6');
 
+        // Category URL mappings
+        $catKeys = [
+            Keyword::CATEGORY_WEBSITE_BUILDER => Yii::t('app', 'class.category.website_builder'),
+            Keyword::CATEGORY_EMAIL => Yii::t('app', 'class.category.email'),
+            Keyword::CATEGORY_DOMAINS => Yii::t('app', 'class.category.domains'),
+            Keyword::CATEGORY_ACCOUNTING => Yii::t('app', 'class.category.accounting'),
+            Keyword::CATEGORY_INVOICING => Yii::t('app', 'class.category.invoicing'),
+            Keyword::CATEGORY_RESELLER => Yii::t('app', 'class.category.reseller'),
+            Keyword::CATEGORY_GENERAL_BRAND => Yii::t('app', 'class.category.general_brand'),
+        ];
+        $categoryUrls = [];
+        foreach ($catKeys as $key => $label) {
+            $categoryUrls[$key] = [
+                'label' => $label,
+                'url' => Setting::get("url.$key", "/$key"),
+            ];
+        }
+
         return $this->render('index', [
             'brandProvider' => $brandProvider,
             'forbiddenProvider' => $forbiddenProvider,
             'volumeMin' => $volumeMin,
             'volumeSources' => $volumeSources,
             'dedupThreshold' => $dedupThreshold,
+            'categoryUrls' => $categoryUrls,
         ]);
     }
 
@@ -119,6 +139,19 @@ class SettingsController extends Controller
         if ($model) {
             $model->delete();
         }
+        return $this->redirect(['index']);
+    }
+
+    /**
+     * Save category → URL mappings.
+     */
+    public function actionSaveUrls(): Response
+    {
+        $urls = Yii::$app->request->post('url', []);
+        foreach ($urls as $category => $path) {
+            Setting::set("url.$category", $path);
+        }
+        Yii::$app->session->setFlash('success', Yii::t('app', 'settings.saved'));
         return $this->redirect(['index']);
     }
 }
