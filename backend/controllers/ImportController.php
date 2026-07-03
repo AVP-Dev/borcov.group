@@ -10,6 +10,7 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\UploadedFile;
 use common\models\ImportBatch;
+use common\models\Keyword;
 use common\models\Source;
 use common\components\pipeline\ImportService;
 
