@@ -32,6 +32,7 @@ return [
             'db' => 'db',
             'tableName' => '{{%queue}}',
             'channel' => 'default',
+            'mutex' => \yii\mutex\PgsqlMutex::class,
         ],
     ],
 ];
