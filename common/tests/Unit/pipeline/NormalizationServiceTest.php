@@ -62,4 +62,30 @@ final class NormalizationServiceTest extends Unit
         $result = $service->normalizeBatch(['Hello', '  WORLD  ', 'Test']);
         verify($result)->equals(['hello', 'world', 'test']);
     }
+
+    public function testDetectLanguageRussian(): void
+    {
+        $service = new NormalizationService();
+        verify($service->detectLanguage('как сделать сайт'))->equals('ru');
+        verify($service->detectLanguage('создать сайт бесплатно'))->equals('ru');
+        verify($service->detectLanguage('бесплатный конструктор'))->equals('ru');
+        verify($service->detectLanguage('конструктор интернет магазина'))->equals('ru');
+        verify($service->detectLanguage('почта для домена'))->equals('ru');
+    }
+
+    public function testDetectLanguageEnglish(): void
+    {
+        $service = new NormalizationService();
+        verify($service->detectLanguage('how to build a website'))->equals('en');
+        verify($service->detectLanguage('best website builder'))->equals('en');
+        verify($service->detectLanguage('buy domain name'))->equals('en');
+        verify($service->detectLanguage('email hosting'))->equals('en');
+    }
+
+    public function testDetectLanguageMixed(): void
+    {
+        $service = new NormalizationService();
+        verify($service->detectLanguage('SEO оптимизация'))->equals('ru');
+        verify($service->detectLanguage('купить domain name'))->equals('ru');
+    }
 }

@@ -138,6 +138,9 @@ $this->registerJs($overrideJs);
             [
                 'attribute' => 'rejection_reason',
                 'label' => Yii::t('app', 'keywords.rejection_reason'),
+                'value' => fn($model) => $model->rejection_reason
+                    ? Yii::t('app', $model->rejection_reason)
+                    : null,
             ],
             [
                 'class' => \yii\grid\ActionColumn::class,

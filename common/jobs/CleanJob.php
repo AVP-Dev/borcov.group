@@ -45,6 +45,7 @@ class CleanJob extends BaseObject implements JobInterface
 
         foreach ($keywords as $keyword) {
             $keyword->normalized_text = $normalizer->normalize($keyword->raw_text);
+            $keyword->language = $normalizer->detectLanguage($keyword->raw_text);
 
             $result = $cleaner->clean($keyword);
 

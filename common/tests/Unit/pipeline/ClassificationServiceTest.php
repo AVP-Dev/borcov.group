@@ -242,4 +242,44 @@ final class ClassificationServiceTest extends Unit
         verify($result['category'])->equals(Keyword::CATEGORY_DOMAINS);
         verify($result['intent'])->equals(Keyword::INTENT_COMMERCIAL);
     }
+
+    // Regression tests — specific phrases from bug reports
+
+    public function testRegressionHowToBuildSiteRu(): void
+    {
+        $service = new ClassificationService();
+        $result = $service->classify($this->makeKeyword('как сделать сайт', 'ru'));
+        verify($result['category'])->equals(Keyword::CATEGORY_WEBSITE_BUILDER);
+        verify($result['intent'])->equals(Keyword::INTENT_INFORMATIONAL);
+    }
+
+    public function testRegressionCreateSiteFreeRu(): void
+    {
+        $service = new ClassificationService();
+        $result = $service->classify($this->makeKeyword('создать сайт бесплатно', 'ru'));
+        verify($result['category'])->equals(Keyword::CATEGORY_WEBSITE_BUILDER);
+        verify($result['intent'])->equals(Keyword::INTENT_INFORMATIONAL);
+    }
+
+    public function testRegressionFreeBuilderRu(): void
+    {
+        $service = new ClassificationService();
+        $result = $service->classify($this->makeKeyword('бесплатный конструктор', 'ru'));
+        verify($result['category'])->equals(Keyword::CATEGORY_WEBSITE_BUILDER);
+        verify($result['intent'])->equals(Keyword::INTENT_INFORMATIONAL);
+    }
+
+    public function testRegressionOnlineStoreBuilderRu(): void
+    {
+        $service = new ClassificationService();
+        $result = $service->classify($this->makeKeyword('конструктор интернет магазина', 'ru'));
+        verify($result['category'])->equals(Keyword::CATEGORY_WEBSITE_BUILDER);
+    }
+
+    public function testRegressionEmailForDomainRu(): void
+    {
+        $service = new ClassificationService();
+        $result = $service->classify($this->makeKeyword('почта для домена', 'ru'));
+        verify($result['category'])->equals(Keyword::CATEGORY_EMAIL);
+    }
 }

@@ -26,6 +26,11 @@ class NormalizationService extends Component
         return $result;
     }
 
+    public function detectLanguage(string $text): string
+    {
+        return preg_match('/\p{Cyrillic}/u', $text) ? 'ru' : 'en';
+    }
+
     private function unifySpecialChars(string $text): string
     {
         $replacements = [
