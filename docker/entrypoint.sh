@@ -102,65 +102,6 @@ done
 echo "      PostgreSQL is accepting connections!"
 
 # -------------------------------------------------------
-# Ensure the application user and database exist.
-# This handles persistent volumes that were initialized
-# with different credentials (e.g. by Coolify's service wizard).
-# -------------------------------------------------------
-echo "Ensuring database user '${DB_USER}' and database '${DB_NAME}' exist..."
-php -r "
-\$created = false;
-
-// pg-entrypoint.sh adds trust auth for 172.0.0.0/8, so try
-// without password first, then with the configured password
-\$attempts = [
-    ['postgres', ''],
-    ['postgres', '${DB_PASS}'],
-    ['postgres', 'postgres'],
-];
-
-foreach (\$attempts as [\$user, \$pass]) {
-    try {
-        \$dsn = 'pgsql:host=${DB_HOST};dbname=postgres';
-        \$pdo = new PDO(\$dsn, \$user, \$pass ?? '');
-        \$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        \$created = true;
-        break;
-    } catch (Exception \$e) {
-        continue;
-    }
-}
-
-if (!\$created) {
-    echo \"  FATAL: could not connect as superuser. Database needs manual fix.\n\";
-    echo \"  Try: docker compose down -v && docker compose up -d\n\";
-    exit(1);
-}
-
-// Check if role exists
-\$stmt = \$pdo->query(\"SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'\");
-if (\$stmt->fetch() === false) {
-    \$pdo->exec(\"CREATE ROLE ${DB_USER} LOGIN PASSWORD '${DB_PASS}'\");
-    echo \"  created user ${DB_USER}\n\";
-} else {
-    echo \"  user '${DB_USER}' already exists\n\";
-}
-
-// Check if database exists
-\$stmt = \$pdo->query(\"SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'\");
-if (\$stmt->fetch() === false) {
-    \$pdo->exec(\"CREATE DATABASE ${DB_NAME} OWNER ${DB_USER}\");
-    echo \"  created database ${DB_NAME}\n\";
-} else {
-    echo \"  database '${DB_NAME}' already exists\n\";
-}
-
-// Grant privileges
-\$pdo->exec(\"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER}\");
-echo \"  privileges granted\n\";
-"
-echo "      Database setup complete"
-
-# -------------------------------------------------------
 # Run migrations (fail visibly on error!)
 # -------------------------------------------------------
 echo "Running migrations..."
