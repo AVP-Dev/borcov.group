@@ -65,18 +65,6 @@ $items = [
     ]) ?>
 
     <div class="d-flex align-items-center gap-2">
-        <?php if (!Yii::$app->user->isGuest): ?>
-            <?= Html::a(
-                Yii::t('app', 'nav.logout_btn'),
-                ['/site/logout'],
-                [
-                    'class' => 'btn btn-outline-light btn-sm',
-                    'data-method' => 'post',
-                    'title' => Yii::t('app', 'nav.logout_title', ['username' => Html::encode(Yii::$app->user->identity->username ?? '')]),
-                ],
-            ) ?>
-        <?php endif; ?>
-
         <?= Html::a(
             Yii::$app->language === 'ru' ? 'EN' : 'RU',
             ['/site/set-language', 'lang' => Yii::$app->language === 'ru' ? 'en' : 'ru'],
@@ -91,6 +79,20 @@ $items = [
                 'aria-label' => Yii::t('app', 'nav.toggle_dark'),
             ],
         ) ?>
+
+        <span class="text-white-50 mx-1">|</span>
+
+        <?php if (!Yii::$app->user->isGuest): ?>
+            <?= Html::a(
+                Yii::t('app', 'nav.logout_btn'),
+                ['/site/logout'],
+                [
+                    'class' => 'btn btn-outline-light btn-sm',
+                    'data-method' => 'post',
+                    'title' => Yii::t('app', 'nav.logout_title', ['username' => Html::encode(Yii::$app->user->identity->username ?? '')]),
+                ],
+            ) ?>
+        <?php endif; ?>
     </div>
 
     <?php NavBar::end() ?>
