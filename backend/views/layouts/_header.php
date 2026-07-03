@@ -35,6 +35,11 @@ $items = [
         'visible' => !Yii::$app->user->isGuest,
     ],
     [
+        'label' => Yii::t('app', 'nav.ad_groups'),
+        'url' => ['/ad-groups/index'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
         'label' => Yii::t('app', 'nav.login'),
         'url' => ['/site/login'],
         'visible' => Yii::$app->user->isGuest,

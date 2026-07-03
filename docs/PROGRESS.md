@@ -213,7 +213,10 @@
 | ClassificationService | `ClassificationServiceTest.php` | 35 |
 | LoginForm | `LoginFormTest.php` | 3 |
 | GapAnalysisService | `GapAnalysisServiceTest.php` | 6 |
-| **Итого** | | **91 тест, 178 assertions** |
+| GroupingService | `GroupingServiceTest.php` | 4 |
+| TemplateAdGenerator | `TemplateAdGeneratorTest.php` | 5 |
+| LlmAdGenerator | `LlmAdGeneratorTest.php` | 5 |
+| **Итого** | | **105 тестов, 192 assertions** |
 
 ### Статический анализ
 - [x] PHPStan level 5 — **0 errors**
@@ -243,10 +246,26 @@ ImportJob (upsert, hash idempotency)
 - **Navbar**: "Gap Analysis" link with `bi-graph-up-arrow` icon
 - **i18n**: keys `gap.*` and `nav.gap_analysis` in both en + ru
 - **Tests**: 6 tests — gap candidate found, existing keyword excluded, fuzzy match excluded, low-volume filtered, competitor brand excluded (regression for "wix конструктор"/"tilda конструктор"), result structure
+- **Деплой + ручная верификация подтверждены** — 6 gap-кандидатов, brand-exclusion работает корректно
+
+### Phase 6 — Grouping & Ad Generation (done, deploy pending)
+
+- **Модели:** `AdGroup`, `AdGroupKeyword` (pivot), `Ad` — Active Record модели для таблиц `ad_groups`, `ad_group_keywords`, `ads`
+- **GroupingService** (`common/components/pipeline/GroupingService.php`): `groupAll()` кластеризует `ready`-ключи в `ad_groups` по `(category, audience_segment, language)`, создаёт/пропускает существующие группы, линкует ключи M2M, опционально генерирует объявления через переданный `AdGeneratorInterface`
+- **AdData** (`common/components/pipeline/AdData.php`): value object для сгенерированного RSA-объявления
+- **AdGeneratorInterface** (`common/components/pipeline/AdGeneratorInterface.php`): контракт с `generate(AdGroup, Keyword): AdData[]`
+- **TemplateAdGenerator** (`common/components/pipeline/TemplateAdGenerator.php`): MVP-шаблонизация — 5 headline/3 description паттернов на en + ru, подстановка `{keyword}` и `{usp}`, маппинг категорий → target URL (`/website-builder`, `/email`, `/domains`, `/accounting`, `/invoicing`, `/reseller`, `/`), USP по (category, language) из `uspMap`
+- **LlmAdGenerator** (`common/components/pipeline/LlmAdGenerator.php`): через DeepSeek API (`api.deepseek.com/v1/chat/completions`), промпт для RSA-генерации с JSON-ответом, HTTP-клиент через callable (инъекция для тестов), fallback на `TemplateAdGenerator` при: пустом API-ключе, ошибке соединения, не-200 статусе, непарсибельном JSON, пустом результате
+- **AdGroupsController** (`backend/controllers/AdGroupsController.php`): `actionIndex()` — список групп, `actionGenerate()` — POST-генерация, `actionView($id)` — просмотр группы с объявлениями и inline-редактированием
+- **View** (`backend/views/ad-groups/index.php`): GridView с группами, кнопка генерации
+- **View** (`backend/views/ad-groups/view.php`): детали группы, список ключей, GridView объявлений, модальное окно inline-редактирования (headline_1/2, description_1, final_url) через JS
+- **Navbar**: "Ad Groups" link, i18n ключи `nav.ad_groups` + `ad.*` + `ad_groups.*` в en/ru
+- **Tests**: 4 GroupingService (группировка, идемпотентность, без ready, с генератором), 5 TemplateAdGenerator (структура/длина/URL/подстановка/ру категория), 5 LlmAdGenerator (fallback на ошибку/пустой ключ/не-JSON/таймаут, парсинг ответа)
+- **Верификация:** 105 тестов, 192 assertions, PHPStan 0 errors (level 5)
 
 ## Что не реализовано (из BRIEF.md §§3–4)
 
-- **Фаза 6:** GroupingService (п.8) + AdGenerationService (п.9) + Ad Groups preview UI
+- **Фаза 7:** ExportService (п.10) + export history UI
 - **Фаза 7:** ExportService (п.10) + export history UI
 - **§4**: Settings page (volume threshold, forbidden/brand terms editors)
 - **README**: билингвальная документация (EN + RU) — требуется по BRIEF.md §6
