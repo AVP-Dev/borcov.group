@@ -10,7 +10,6 @@ use common\models\ExportBatch;
 use common\models\Keyword;
 use Yii;
 use yii\data\ActiveDataProvider;
-use yii\helpers\ArrayHelper;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -42,7 +41,6 @@ class ExportController extends Controller
 
         $groupStats = ExportService::getGroupedStats();
 
-        // Apply filters
         $filteredStats = [];
         foreach ($groupStats as $groupId => $stats) {
             $group = $stats['group'];
@@ -55,7 +53,6 @@ class ExportController extends Controller
             $filteredStats[$groupId] = $stats;
         }
 
-        // Load ads for ALL groups (client-side filtering hides rows, doesn't remove them)
         $groupAds = [];
         foreach ($groupStats as $groupId => $stats) {
             $groupAds[$groupId] = Ad::find()
@@ -64,7 +61,6 @@ class ExportController extends Controller
                 ->all();
         }
 
-        // Available categories/languages for filter dropdowns
         $categories = [];
         $languages = [];
         foreach ($groupStats as $stats) {
@@ -86,7 +82,7 @@ class ExportController extends Controller
 
         return $this->render('index', [
             'historyProvider' => $historyProvider,
-            'groupStats' => $groupStats, // ALL groups — client-side JS does the filtering
+            'groupStats' => $groupStats,
             'groupAds' => $groupAds,
             'filterCategory' => $filterCategory,
             'filterLanguage' => $filterLanguage,
@@ -103,30 +99,35 @@ class ExportController extends Controller
 
         $service = new ExportService();
 
-        if ($exportAll) {
-            [$filePath, $adsCount, $keywordsCount] = $service->export();
-        } elseif (is_array($adIds) && $adIds !== []) {
-            $adIds = array_map('intval', $adIds);
-            [$filePath, $adsCount, $keywordsCount] = $service->exportSelected($adIds);
-        } elseif (is_array($groupIds) && $groupIds !== []) {
-            $groupIds = array_map('intval', $groupIds);
-            [$filePath, $adsCount, $keywordsCount] = $service->exportGroups($groupIds);
-        } else {
-            Yii::$app->session->setFlash('warning', Yii::t('app', 'export.no_selection'));
+        try {
+            if ($exportAll) {
+                [$filePath, $adsCount, $keywordsCount] = $service->export();
+            } elseif (is_array($adIds) && $adIds !== []) {
+                $adIds = array_map('intval', $adIds);
+                [$filePath, $adsCount, $keywordsCount] = $service->exportSelected($adIds);
+            } elseif (is_array($groupIds) && $groupIds !== []) {
+                $groupIds = array_map('intval', $groupIds);
+                [$filePath, $adsCount, $keywordsCount] = $service->exportGroups($groupIds);
+            } else {
+                Yii::$app->session->setFlash('warning', Yii::t('app', 'export.no_selection'));
+                return $this->redirect(['index']);
+            }
+
+            if ($adsCount === 0) {
+                Yii::$app->session->setFlash('warning', Yii::t('app', 'export.nothing_to_export'));
+                return $this->redirect(['index']);
+            }
+
+            return Yii::$app->response->sendFile(
+                $filePath,
+                basename($filePath),
+                ['mimeType' => 'text/csv'],
+            );
+        } catch (\Throwable $e) {
+            Yii::error("Export failed: " . $e->getMessage(), __METHOD__);
+            Yii::$app->session->setFlash('error', Yii::t('app', 'export.export_error', ['error' => $e->getMessage()]));
             return $this->redirect(['index']);
         }
-
-        if ($adsCount === 0) {
-            Yii::$app->session->setFlash('warning', Yii::t('app', 'export.nothing_to_export'));
-            return $this->redirect(['index']);
-        }
-
-        // Send file directly — browser shows Save As dialog
-        return Yii::$app->response->sendFile(
-            $filePath,
-            basename($filePath),
-            ['mimeType' => 'text/csv'],
-        );
     }
 
     public function actionReset(): Response
@@ -151,15 +152,21 @@ class ExportController extends Controller
 
     public function actionDownload(int $id): Response
     {
-        $batch = ExportBatch::findOne($id);
-        if ($batch === null || $batch->file_path === '' || !file_exists($batch->file_path)) {
-            throw new NotFoundHttpException(Yii::t('app', 'export.not_found'));
-        }
+        try {
+            $batch = ExportBatch::findOne($id);
+            if ($batch === null || $batch->file_path === '' || !file_exists($batch->file_path)) {
+                throw new NotFoundHttpException(Yii::t('app', 'export.not_found'));
+            }
 
-        return Yii::$app->response->sendFile(
-            $batch->file_path,
-            basename($batch->file_path),
-            ['mimeType' => 'text/csv'],
-        );
+            return Yii::$app->response->sendFile(
+                $batch->file_path,
+                basename($batch->file_path),
+                ['mimeType' => 'text/csv'],
+            );
+        } catch (\Throwable $e) {
+            Yii::error("Export download failed: " . $e->getMessage(), __METHOD__);
+            Yii::$app->session->setFlash('error', Yii::t('app', 'export.download_error', ['error' => $e->getMessage()]));
+            return $this->redirect(['index']);
+        }
     }
 }

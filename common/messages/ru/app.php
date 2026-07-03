@@ -271,6 +271,8 @@ return [
     'export.filter_all_categories' => 'Все категории',
     'export.filter_all_languages' => 'Все языки',
     'export.clear_filters' => 'Сбросить',
+    'export.export_error' => 'Ошибка экспорта: {error}',
+    'export.download_error' => 'Ошибка загрузки: {error}',
 
     // Settings
     'settings.title' => 'Настройки',

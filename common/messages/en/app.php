@@ -271,6 +271,8 @@ return [
     'export.filter_all_categories' => 'All categories',
     'export.filter_all_languages' => 'All languages',
     'export.clear_filters' => 'Clear',
+    'export.export_error' => 'Export failed: {error}',
+    'export.download_error' => 'Download failed: {error}',
 
     // Settings
     'settings.title' => 'Settings',
