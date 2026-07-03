@@ -57,6 +57,10 @@ return [
     'dashboard.quick_actions' => 'Быстрые действия',
     'dashboard.pipeline_status' => 'Статус пайплайна',
     'dashboard.view_batches' => 'Все импорты',
+    'dashboard.ad_groups' => 'Группы объявлений',
+    'dashboard.total_ads' => 'Всего объявлений',
+    'dashboard.ads_draft' => 'Черновики',
+    'dashboard.ads_exported' => 'Экспортировано',
 
     // Nav
     'nav.home' => 'Главная',

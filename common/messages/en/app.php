@@ -57,6 +57,10 @@ return [
     'dashboard.quick_actions' => 'Quick Actions',
     'dashboard.pipeline_status' => 'Pipeline Status',
     'dashboard.view_batches' => 'View All Batches',
+    'dashboard.ad_groups' => 'Ad Groups',
+    'dashboard.total_ads' => 'Total Ads',
+    'dashboard.ads_draft' => 'Draft Ads',
+    'dashboard.ads_exported' => 'Exported',
 
     // Nav
     'nav.home' => 'Home',

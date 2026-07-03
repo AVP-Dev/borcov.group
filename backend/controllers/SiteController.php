@@ -66,10 +66,15 @@ class SiteController extends Controller
         $keywordsRaw = \common\models\Keyword::find()->where(['status' => \common\models\Keyword::STATUS_RAW])->count();
         $keywordsCleaned = \common\models\Keyword::find()->where(['status' => \common\models\Keyword::STATUS_CLEANED])->count();
         $keywordsRejected = \common\models\Keyword::find()->where(['status' => \common\models\Keyword::STATUS_REJECTED])->count();
+        $adGroupsCount = \common\models\AdGroup::find()->count();
+        $adsCount = \common\models\Ad::find()->count();
+        $adsDraft = \common\models\Ad::find()->where(['status' => \common\models\Ad::STATUS_DRAFT])->count();
+        $adsExported = \common\models\Ad::find()->where(['status' => \common\models\Ad::STATUS_EXPORTED])->count();
 
         return $this->render('index', compact(
             'importBatchesCount', 'keywordsTotal', 'keywordsReady',
             'keywordsRaw', 'keywordsCleaned', 'keywordsRejected',
+            'adGroupsCount', 'adsCount', 'adsDraft', 'adsExported',
         ));
     }
 
