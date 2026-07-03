@@ -87,10 +87,11 @@ $this->registerJs('
                     if ($model->status === ImportBatch::STATUS_PROCESSING) {
                         return '<span class="spinner-border spinner-border-sm me-1" role="status"></span> ' . Html::encode(Yii::t('app', 'import.status.' . $model->status));
                     }
-                    if ($model->status === ImportBatch::STATUS_FAILED && $model->error_message) {
+                    if ($model->status === ImportBatch::STATUS_FAILED) {
+                        $errMsg = $model->error_message ?? 'Check app logs for details';
                         return '<span class="text-danger">' . Html::encode(Yii::t('app', 'import.status.failed')) . '</span>'
-                            . '<br><small class="text-muted" title="' . Html::encode($model->error_message) . '">'
-                            . Html::encode(mb_substr($model->error_message, 0, 80)) . (mb_strlen($model->error_message) > 80 ? '…' : '')
+                            . '<br><small class="text-muted">'
+                            . Html::encode(mb_substr($errMsg, 0, 120)) . (mb_strlen($errMsg) > 120 ? '…' : '')
                             . '</small>';
                     }
                     return Yii::t('app', 'import.status.' . $model->status);
