@@ -112,16 +112,16 @@ class ImportController extends Controller
     {
         $batch = ImportBatch::findOne($id);
         if ($batch === null) {
-            Yii::\$app->session->setFlash('error', Yii::t('app', 'import.batch_not_found'));
-            return \$this->redirect(['batches']);
+            Yii::$app->session->setFlash('error', Yii::t('app', 'import.batch_not_found'));
+            return $this->redirect(['batches']);
         }
 
-        $db = Yii::\$app->db;
-        $db->createCommand()->delete('{{%ad_group_keywords}}', ['keyword_id' => \common\models\Keyword::find()->select('id')->where(['batch_id' => $id])])->execute();
-        \common\models\Keyword::deleteAll(['batch_id' => $id]);
+        $db = Yii::$app->db;
+        $db->createCommand()->delete('{{%ad_group_keywords}}', ['keyword_id' => common\models\Keyword::find()->select('id')->where(['batch_id' => $id])])->execute();
+        common\models\Keyword::deleteAll(['batch_id' => $id]);
         $batch->delete();
 
-        Yii::\$app->session->setFlash('success', Yii::t('app', 'import.batch_deleted'));
-        return \$this->redirect(['batches']);
+        Yii::$app->session->setFlash('success', Yii::t('app', 'import.batch_deleted'));
+        return $this->redirect(['batches']);
     }
 }
