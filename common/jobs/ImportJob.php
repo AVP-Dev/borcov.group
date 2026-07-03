@@ -166,6 +166,7 @@ class ImportJob extends BaseObject implements JobInterface
     private function failBatch(ImportBatch $batch, string $reason): void
     {
         $batch->status = ImportBatch::STATUS_FAILED;
+        $batch->error_message = $reason;
         $batch->save();
     }
 

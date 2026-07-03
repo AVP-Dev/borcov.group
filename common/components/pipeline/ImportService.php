@@ -30,6 +30,19 @@ class ImportService extends Component
 
         $existing = ImportBatch::findOne(['file_hash' => $hash]);
         if ($existing !== null) {
+            if ($existing->status === ImportBatch::STATUS_FAILED) {
+                // Re-process failed batch: reset and push new job
+                $existing->status = ImportBatch::STATUS_PROCESSING;
+                $existing->error_message = null;
+                $existing->rows_total = 0;
+                $existing->rows_accepted = 0;
+                $existing->rows_rejected = 0;
+                $existing->save();
+                \Yii::$app->queue->push(new \common\jobs\ImportJob([
+                    'batchId' => $existing->id,
+                    'filePath' => $filePath,
+                ]));
+            }
             return $existing;
         }
 

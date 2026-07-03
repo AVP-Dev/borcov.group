@@ -24,6 +24,7 @@ class ImportBatch extends ActiveRecord
             [['source_id', 'imported_at', 'rows_total', 'rows_accepted', 'rows_rejected'], 'integer'],
             ['filename', 'string', 'max' => 255],
             ['file_hash', 'string', 'max' => 64],
+            ['error_message', 'string'],
             ['status', 'default', 'value' => self::STATUS_PROCESSING],
             ['status', 'in', 'range' => [self::STATUS_PROCESSING, self::STATUS_DONE, self::STATUS_FAILED]],
         ];

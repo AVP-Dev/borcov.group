@@ -116,9 +116,11 @@ class ImportController extends Controller
             return $this->redirect(['batches']);
         }
 
-        $db = Yii::$app->db;
-        $db->createCommand()->delete('{{%ad_group_keywords}}', ['keyword_id' => common\models\Keyword::find()->select('id')->where(['batch_id' => $id])])->execute();
-        common\models\Keyword::deleteAll(['batch_id' => $id]);
+        $kwIds = Keyword::find()->select('id')->where(['batch_id' => $id])->column();
+        if ($kwIds !== []) {
+            Yii::$app->db->createCommand()->delete('{{%ad_group_keywords}}', ['keyword_id' => $kwIds])->execute();
+            Keyword::deleteAll(['batch_id' => $id]);
+        }
         $batch->delete();
 
         Yii::$app->session->setFlash('success', Yii::t('app', 'import.batch_deleted'));
