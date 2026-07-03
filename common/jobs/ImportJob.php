@@ -128,19 +128,31 @@ class ImportJob extends BaseObject implements JobInterface
         return match ($sourceType) {
             'gads' => new CsvAdapter([
                 'delimiter' => ',',
-                'columnMap' => ['keyword' => 'Keyword', 'volume' => 'Volume'],
+                'columnMap' => [
+                    'keyword' => ['Keyword', 'keyword', 'Search term', 'Keyword text', 'Key phrase'],
+                    'volume' => ['Volume', 'volume', 'Avg. monthly searches', 'Impressions', 'impressions'],
+                ],
             ]),
             'ahrefs_organic' => new CsvAdapter([
                 'delimiter' => ',',
-                'columnMap' => ['keyword' => 'Keyword', 'volume' => 'Volume'],
+                'columnMap' => [
+                    'keyword' => ['Keyword', 'keyword'],
+                    'volume' => ['Volume', 'volume'],
+                ],
             ]),
             'ahrefs_paid' => new CsvAdapter([
                 'delimiter' => ',',
-                'columnMap' => ['keyword' => 'Keyword', 'volume' => 'Volume'],
+                'columnMap' => [
+                    'keyword' => ['Keyword', 'keyword'],
+                    'volume' => ['Volume', 'volume'],
+                ],
             ]),
             'search_console' => new CsvAdapter([
                 'delimiter' => ',',
-                'columnMap' => ['keyword' => 'Search query', 'volume' => 'Impressions'],
+                'columnMap' => [
+                    'keyword' => ['Search query', 'Поисковый запрос', 'Query', 'Top queries', 'keyword', 'Keyword'],
+                    'volume' => ['Impressions', 'Показы', 'Volume', 'volume'],
+                ],
             ]),
             default => throw new \InvalidArgumentException("Unknown source type: $sourceType"),
         };

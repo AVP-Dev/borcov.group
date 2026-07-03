@@ -44,10 +44,17 @@ class CsvAdapter extends BaseObject implements SourceAdapterInterface
             if ($header) {
                 $assoc = [];
                 foreach ($this->columnMap as $target => $source) {
-                    $lcSource = mb_strtolower($source);
-                    $index = array_search($lcSource, $lcHeader, true);
-                    $raw = $index !== false && isset($row[$index]) ? $row[$index] : null;
-                    $assoc[$target] = ($raw !== null && $raw !== '') ? $raw : null;
+                    $names = (array)$source;
+                    $raw = null;
+                    foreach ($names as $name) {
+                        $lcName = mb_strtolower($name);
+                        $index = array_search($lcName, $lcHeader, true);
+                        if ($index !== false && isset($row[$index]) && $row[$index] !== '') {
+                            $raw = $row[$index];
+                            break;
+                        }
+                    }
+                    $assoc[$target] = $raw;
                 }
                 yield $assoc;
             } else {
