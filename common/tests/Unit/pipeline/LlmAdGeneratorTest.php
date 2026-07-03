@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace common\tests\Unit\pipeline;
 
 use Codeception\Test\Unit;
+use common\components\pipeline\AdData;
 use common\components\pipeline\AdGeneratorInterface;
 use common\components\pipeline\LlmAdGenerator;
 use common\components\pipeline\TemplateAdGenerator;
@@ -23,6 +24,7 @@ final class LlmAdGeneratorTest extends Unit
     {
         parent::_setUp();
         Yii::$app->params['deepseekApiKey'] = 'test-key';
+        Yii::$app->params['siteUrl'] = 'https://site.pro';
 
         $this->group = new AdGroup();
         $this->group->category = Keyword::CATEGORY_WEBSITE_BUILDER;
@@ -40,13 +42,14 @@ final class LlmAdGeneratorTest extends Unit
     protected function _tearDown(): void
     {
         unset(Yii::$app->params['deepseekApiKey']);
+        unset(Yii::$app->params['siteUrl']);
         parent::_tearDown();
     }
 
     public function testFallsBackOnFailedHttpCall(): void
     {
         $httpMock = function (string $url, array $headers, int $timeout): array {
-            return [0, '']; // connection error
+            return [0, ''];
         };
 
         $fallback = new TemplateAdGenerator();
@@ -54,7 +57,7 @@ final class LlmAdGeneratorTest extends Unit
         $ads = $generator->generate($this->group, $this->keyword);
 
         verify(count($ads) > 0);
-        verify($ads[0]->headline1)->stringContainsString('website builder');
+        verify($ads[0]->source)->equals(AdData::SOURCE_LLM_FALLBACK);
     }
 
     public function testFallsBackOnEmptyApiKey(): void
@@ -66,6 +69,7 @@ final class LlmAdGeneratorTest extends Unit
         $ads = $generator->generate($this->group, $this->keyword);
 
         verify(count($ads) > 0);
+        verify($ads[0]->source)->equals(AdData::SOURCE_LLM_FALLBACK);
     }
 
     public function testFallsBackOnNonJsonResponse(): void
@@ -78,6 +82,7 @@ final class LlmAdGeneratorTest extends Unit
         $ads = $generator->generate($this->group, $this->keyword);
 
         verify(count($ads) > 0);
+        verify($ads[0]->source)->equals(AdData::SOURCE_LLM_FALLBACK);
     }
 
     public function testFallsBackOnTimeout(): void
@@ -90,9 +95,10 @@ final class LlmAdGeneratorTest extends Unit
         $ads = $generator->generate($this->group, $this->keyword);
 
         verify(count($ads) > 0);
+        verify($ads[0]->source)->equals(AdData::SOURCE_LLM_FALLBACK);
     }
 
-    public function testParsesValidDeepSeekResponse(): void
+    public function testHappyPathWithSourceLlm(): void
     {
         $mockResponse = json_encode([
             'choices' => [
@@ -124,8 +130,10 @@ final class LlmAdGeneratorTest extends Unit
         $ads = $generator->generate($this->group, $this->keyword);
 
         verify(count($ads) === 1);
+        verify($ads[0]->source)->equals(AdData::SOURCE_LLM);
         verify($ads[0]->headline1)->stringContainsString('Website');
         verify(mb_strlen($ads[0]->headline1) <= AdGeneratorInterface::MAX_HEADLINE_LENGTH);
+        verify(mb_strlen($ads[0]->description1) <= AdGeneratorInterface::MAX_DESCRIPTION_LENGTH);
         verify($ads[0]->path1)->stringContainsString('website-builder');
     }
 }

@@ -6,12 +6,14 @@ declare(strict_types=1);
  * @var \yii\web\View $this
  * @var \common\models\AdGroup $group
  * @var \yii\data\ActiveDataProvider $adsProvider
+ * @var bool $deepseekAvailable
  */
 
 use yii\helpers\Html;
 use yii\grid\GridView;
 use yii\widgets\ActiveForm;
 use common\models\Ad;
+use common\components\pipeline\AdData;
 
 $this->title = Yii::t('app', 'ad_groups.view_title', ['label' => $group->theme_label]);
 $this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'ad_groups.title'), 'url' => ['index']];
@@ -26,6 +28,27 @@ $this->params['breadcrumbs'][] = $group->theme_label;
         <div class="col-md-1"><strong><?= Yii::t('app', 'ad_groups.language') ?>:</strong> <?= Html::encode($group->language) ?></div>
         <div class="col-md-3"><strong><?= Yii::t('app', 'ad_groups.target_url') ?>:</strong> <?= Html::encode($group->target_url) ?></div>
         <div class="col-md-2"><strong><?= Yii::t('app', 'ad_groups.keywords_count') ?>:</strong> <?= $group->getKeywords()->count() ?></div>
+    </div>
+
+    <!-- Generator Switcher -->
+    <div class="card mb-4">
+        <div class="card-body d-flex align-items-center gap-3">
+            <span class="fw-semibold"><?= Yii::t('app', 'ad_groups.generator_label') ?>:</span>
+            <?php $form = ActiveForm::begin(['action' => ['regenerate', 'id' => $group->id], 'method' => 'post']) ?>
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="generator" id="gen-template" value="template" checked>
+                <label class="btn btn-outline-secondary" for="gen-template"><?= Yii::t('app', 'ad_groups.generator_template') ?></label>
+                <input type="radio" class="btn-check" name="generator" id="gen-llm" value="llm" <?= $deepseekAvailable ? '' : 'disabled' ?>>
+                <label class="btn btn-outline-info <?= $deepseekAvailable ? '' : 'text-muted' ?>" for="gen-llm">
+                    <?= Yii::t('app', 'ad_groups.generator_llm') ?>
+                    <?php if (!$deepseekAvailable): ?>
+                        <small>(<?= Yii::t('app', 'ad_groups.generator_unavailable') ?>)</small>
+                    <?php endif; ?>
+                </label>
+            </div>
+            <?= Html::submitButton(Yii::t('app', 'ad_groups.regenerate_btn'), ['class' => 'btn btn-primary ms-2']) ?>
+            <?php ActiveForm::end() ?>
+        </div>
     </div>
 
     <h4 class="mb-3"><?= Yii::t('app', 'ad_groups.keywords_title') ?></h4>
@@ -60,6 +83,15 @@ $this->params['breadcrumbs'][] = $group->theme_label;
                 'value' => fn(Ad $ad) => Html::tag('small', Html::encode(mb_substr($ad->description_1, 0, 60))),
             ],
             'final_url',
+            [
+                'attribute' => 'generator',
+                'format' => 'raw',
+                'value' => fn(Ad $ad) => match ($ad->generator) {
+                    AdData::SOURCE_LLM => Html::tag('span', Yii::t('app', 'ad_groups.badge_ai'), ['class' => 'badge bg-info']),
+                    AdData::SOURCE_LLM_FALLBACK => Html::tag('span', Yii::t('app', 'ad_groups.badge_ai_fallback'), ['class' => 'badge bg-warning text-dark']),
+                    default => Html::tag('span', Yii::t('app', 'ad_groups.badge_template'), ['class' => 'badge bg-secondary']),
+                },
+            ],
             'status',
             [
                 'class' => 'yii\grid\ActionColumn',

@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @var \yii\web\View $this
  * @var \yii\data\ActiveDataProvider $dataProvider
+ * @var bool $deepseekAvailable
  */
 
 use yii\helpers\Html;
@@ -17,11 +18,16 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="ad-groups-index">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0"><?= Html::encode($this->title) ?></h1>
-        <?= Html::a(
-            Yii::t('app', 'ad_groups.generate_btn'),
-            ['generate'],
-            ['class' => 'btn btn-primary', 'data-method' => 'post'],
-        ) ?>
+        <div>
+            <?php if ($deepseekAvailable): ?>
+                <span class="badge bg-info me-2"><?= Yii::t('app', 'ad_groups.generator_ai_available') ?></span>
+            <?php endif; ?>
+            <?= Html::a(
+                Yii::t('app', 'ad_groups.generate_btn'),
+                ['generate'],
+                ['class' => 'btn btn-primary', 'data-method' => 'post'],
+            ) ?>
+        </div>
     </div>
 
     <?= GridView::widget([

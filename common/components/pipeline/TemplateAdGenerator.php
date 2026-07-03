@@ -111,6 +111,7 @@ class TemplateAdGenerator implements AdGeneratorInterface
                 finalUrl: $targetUrl,
                 path1: mb_substr($path1, 0, self::MAX_PATH_LENGTH),
                 path2: null,
+                source: AdData::SOURCE_TEMPLATE,
             );
         }
 

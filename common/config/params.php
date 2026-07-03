@@ -10,6 +10,9 @@ return [
     'user.passwordResetTokenExpire' => 3600,
     'user.passwordMinLength' => 8,
 
+    // DeepSeek API
+    'deepseekApiKey' => getenv('DEEPSEEK_API_KEY') ?: '',
+
     // Pipeline
     'pipeline.volume.min' => 10,
     'pipeline.volume.min_source_count' => 3,

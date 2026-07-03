@@ -6,6 +6,10 @@ namespace common\components\pipeline;
 
 final class AdData
 {
+    public const string SOURCE_TEMPLATE = 'template';
+    public const string SOURCE_LLM = 'llm';
+    public const string SOURCE_LLM_FALLBACK = 'llm_fallback';
+
     public function __construct(
         public readonly string $headline1,
         public readonly string $headline2,
@@ -15,5 +19,6 @@ final class AdData
         public readonly string $finalUrl,
         public readonly ?string $path1,
         public readonly ?string $path2,
+        public readonly string $source = self::SOURCE_TEMPLATE,
     ) {}
 }

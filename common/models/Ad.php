@@ -30,6 +30,8 @@ class Ad extends ActiveRecord
             [['path_1', 'path_2'], 'string', 'max' => 15],
             ['status', 'default', 'value' => self::STATUS_DRAFT],
             ['status', 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_READY, self::STATUS_EXPORTED]],
+            ['generator', 'string', 'max' => 20],
+            ['generator', 'default', 'value' => 'template'],
         ];
     }
 

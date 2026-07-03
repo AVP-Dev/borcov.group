@@ -42,7 +42,7 @@ class LlmAdGenerator implements AdGeneratorInterface
     {
         $apiKey = Yii::$app->params['deepseekApiKey'] ?? '';
         if ($apiKey === '') {
-            return $this->fallback->generate($group, $keyword);
+            return $this->markFallback($this->fallback->generate($group, $keyword));
         }
 
         $lang = $keyword->language ?: $group->language ?: 'en';
@@ -51,15 +51,35 @@ class LlmAdGenerator implements AdGeneratorInterface
         [$status, $body] = $this->callApi($apiKey, $prompt);
 
         if ($status !== 200 || $body === '') {
-            return $this->fallback->generate($group, $keyword);
+            return $this->markFallback($this->fallback->generate($group, $keyword));
         }
 
         $ads = $this->parseResponse($body, $keyword, $group);
         if ($ads === []) {
-            return $this->fallback->generate($group, $keyword);
+            return $this->markFallback($this->fallback->generate($group, $keyword));
         }
 
         return $ads;
+    }
+
+    /** @param AdData[] $ads */
+    private function markFallback(array $ads): array
+    {
+        $result = [];
+        foreach ($ads as $ad) {
+            $result[] = new AdData(
+                headline1: $ad->headline1,
+                headline2: $ad->headline2,
+                headline3: $ad->headline3,
+                description1: $ad->description1,
+                description2: $ad->description2,
+                finalUrl: $ad->finalUrl,
+                path1: $ad->path1,
+                path2: $ad->path2,
+                source: AdData::SOURCE_LLM_FALLBACK,
+            );
+        }
+        return $result;
     }
 
     private function callApi(string $apiKey, string $prompt): array
@@ -133,6 +153,7 @@ class LlmAdGenerator implements AdGeneratorInterface
                 finalUrl: $targetUrl,
                 path1: isset($item['path1']) ? mb_substr((string)$item['path1'], 0, AdGeneratorInterface::MAX_PATH_LENGTH) : null,
                 path2: isset($item['path2']) ? mb_substr((string)$item['path2'], 0, AdGeneratorInterface::MAX_PATH_LENGTH) : null,
+                source: AdData::SOURCE_LLM,
             );
         }
 
