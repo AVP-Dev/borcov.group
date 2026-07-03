@@ -62,5 +62,9 @@ class CleanJob extends BaseObject implements JobInterface
         $batch->rows_accepted = $stats['cleaned'] - $dedupCount - $volumeCount;
         $batch->rows_rejected = $stats['rejected'] + $dedupCount + $volumeCount;
         $batch->save();
+
+        Yii::$app->queue->push(new ClassificationJob([
+            'batchId' => $this->batchId,
+        ]));
     }
 }

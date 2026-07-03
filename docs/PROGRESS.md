@@ -103,3 +103,31 @@
 
 ### Деплой на реальный URL
 - [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login, dashboard, все миграции на сервере
+
+---
+
+## Фаза 3: Classification — rule-based classifier (category/audience_segment/intent)
+
+### Создано
+- [x] `common/config/classification.php` — конфигурируемые правила: 7 категорий + 3 интента + B2B-сегмент, en/ru паттерны
+- [x] `common/components/pipeline/ClassificationService.php` — rule-based классификатор: category (6 продуктовых + general_brand + unclassified), audience_segment (b2c/b2b), intent (commercial/informational/navigational/unknown)
+- [x] `common/jobs/ClassificationJob.php` — queue job: классифицирует все keywords batch со статусом cleaned → проставляет category/intent/audience_segment, переводит в ready
+- [x] CleanJob доработан: после VolumeFilter пушит ClassificationJob в очередь
+
+### Тесты
+- [x] `common/tests/Unit/pipeline/ClassificationServiceTest.php` — 30 тестов, 36 ассершнов
+   - Все 7 категорий (en + ru): website_builder, email, domains, accounting, invoicing, reseller, general_brand
+   - Unclassified fallback
+   - Все 4 интента (en + ru): commercial, informational, navigational, unknown
+   - B2B/B2C аудитория (en + ru)
+   - Edge cases: пустой текст, null язык, whitespace, смешанный en/ru, site.pro без точки
+- [x] Итого: 72 теста, 133 assertion — все проходят
+
+### Статический анализ
+- [x] PHPStan level 5 — 0 ошибок в новом коде
+
+### i18n
+- [x] 17 новых ключей (en/ru): class.* — категории, интенты, аудитория
+
+### Деплой на реальный URL
+- [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login работает, дашборд открывается, нет 500
