@@ -8,6 +8,9 @@ use yii\db\ActiveRecord;
 
 class ImportBatch extends ActiveRecord
 {
+    /** @var string|null In-memory error message (may not have DB column yet) */
+    public ?string $error_message = null;
+
     public const STATUS_PROCESSING = 'processing';
     public const STATUS_DONE = 'done';
     public const STATUS_FAILED = 'failed';

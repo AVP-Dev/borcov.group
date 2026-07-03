@@ -188,11 +188,15 @@ class ImportJob extends BaseObject implements JobInterface
     private function failBatch(ImportBatch $batch, string $reason): void
     {
         $batch->status = ImportBatch::STATUS_FAILED;
-        $batch->error_message = $reason;
+        try {
+            $batch->error_message = $reason;
+        } catch (\Throwable $e) {
+            // error_message column may not exist
+        }
         try {
             $batch->save();
         } catch (\Throwable $e) {
-            Yii::warning("Could not save error_message (column may not exist): " . $e->getMessage(), __METHOD__);
+            Yii::warning("Could not save batch after failure: " . $e->getMessage(), __METHOD__);
         }
         Yii::error("ImportJob #{$this->batchId} failed: $reason", __METHOD__);
     }
