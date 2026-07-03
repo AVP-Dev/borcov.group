@@ -7,7 +7,6 @@ declare(strict_types=1);
  * @var \yii\data\ActiveDataProvider $dataProvider
  * @var \yii\data\ActiveDataProvider $adsProvider
  * @var int $draftAdsCount
- * @var array $groupStats
  */
 
 use common\models\Ad;
@@ -55,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?php foreach ($adsProvider->getModels() as $ad): ?>
                                 <tr>
                                     <td><input type="checkbox" name="ad_ids[]" value="<?= $ad->id ?>" class="ad-check"></td>
-                                    <td><small class="text-muted"><?= Html::encode($ad->adGroup?->theme_label ?? '—') ?></small></td>
+                                    <td><small class="text-muted"><?= Html::encode($ad->adGroup->theme_label ?? '—') ?></small></td>
                                     <td><?= Html::encode(mb_substr($ad->headline_1, 0, 30)) ?></td>
                                     <td><?= Html::encode(mb_substr($ad->headline_2, 0, 30)) ?></td>
                                     <td><small><?= Html::encode(mb_substr($ad->description_1, 0, 50)) ?></small></td>

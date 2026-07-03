@@ -216,7 +216,7 @@
 | GroupingService | `GroupingServiceTest.php` | 4 |
 | TemplateAdGenerator | `TemplateAdGeneratorTest.php` | 5 |
 | LlmAdGenerator | `LlmAdGeneratorTest.php` | 5 |
-| **Итого** | | **105 тестов, 192 assertions** |
+| **Итого** | | **128 тестов, 279 assertions** |
 
 ### Статический анализ
 - [x] PHPStan level 5 — **0 errors**
@@ -302,20 +302,23 @@ ImportJob (upsert, hash idempotency)
 - **ExportService** (`common/components/pipeline/ExportService.php`):
   - Генерирует Google Ads Editor CSV: Campaign, Campaign Type, Keyword, Match Type, Headlines 1-15, Descriptions 1-4, Final URL, Path 1-2
   - Campaign name = `{brand} — {category} — {audience} — {language}`
-  - Сохраняет файл в `runtime/exports/`
+  - Сохраняет файл в `@backend/runtime/exports/`
   - Создаёт запись в `export_batches`
   - Помечает ads как `exported`
 - **ExportController** (`backend/controllers/ExportController.php`):
   - `actionIndex()` — страница экспорта + история
-  - `actionCreate()` — POST: генерация CSV
+  - `actionCreate()` — POST: генерация CSV (full или selected)
   - `actionDownload($id)` — скачивание CSV-файла
-- **Export View** (`backend/views/export/index.php`): кнопка экспорта + GridView истории + скачивание
+- **Selective Export** — чекбоксы для выбора конкретных ad, кнопки "Select All"/"Deselect All", счётчик выбранных
+- **Export View** (`backend/views/export/index.php`): форма с таблицей draft ads + GridView истории + скачивание
+- **Export Path fix** — путь изменён с `@common/runtime/exports` на `@backend/runtime/exports` (common/runtime не был доступен для записи в Docker)
+- **Null safety fix** — защита от `Error: Cannot access property on null` при пустом массиве ключей в ad group
 - **Nav menu** — ссылка "Export" добавлена
-- **i18n** — ключи `export.*` (en/ru)
+- **i18n** — ключи `export.*` (en/ru), включая `export.select_ads`, `export.export_selected`, `export.select_all`, `export.deselect_all`, `export.selected`
 - **Тесты:** 4 теста (CSV заголовки, запись в БД, статус exported, пустой экспорт)
 
 ### Деплой
-- [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login, export page (redirect to login), nav menu updated
+- [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login, export page, selective export, download, nav menu updated
 
 ---
 

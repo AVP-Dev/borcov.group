@@ -107,7 +107,12 @@ class ExportService
                 . ' — ' . $group->language;
 
             $keywords = $group->getKeywords()->all();
-            $keywordText = $keywords[0]->normalized_text ?? $keywords[0]->raw_text ?? '';
+            if ($keywords === []) {
+                Yii::warning("AdGroup #{$group->id} has no keywords, skipping ad #{$ad->id}", __METHOD__);
+                continue;
+            }
+            $firstKeyword = $keywords[0];
+            $keywordText = $firstKeyword->normalized_text ?? $firstKeyword->raw_text ?? '';
             $keywordCount += count($keywords);
 
             $row = [
