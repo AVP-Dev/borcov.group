@@ -24,13 +24,14 @@
 - [x] Language switcher: `/site/set-language` action, session-based, в навбаре
 - [ ] Codeception unit/functional suites — ожидает настройки тестовой БД
 
-### Известные проблемы
+### Известные проблемы (решённые)
 - `yiisoft/yii2-queue` не работал в Docker build (`composer install --no-dev` exit 4) — пофикшено обновлением composer.lock
 - Action name `language` — зарезервированное слово в Yii2, переименован в `set-language`
+- build падал на zip расширении (aarch64) — пофикшено отдельным `docker-php-ext-install zip`
+- queue падал с `Error: Failed to instantiate component or class "mutex"` — пофикшено добавлением `PgsqlMutex` в конфиг queue
 
 ### Деплой на реальный URL
-- После push `de79d2c` (composer.lock) — **билд упал** (см. логи Coolify, код ошибки?)
-- Сейчас: HTTP 503 (контейнер пересобирается или упал)
+- [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login page, CSRF, CSS, язык EN, health endpoint OK
 
 ---
 
