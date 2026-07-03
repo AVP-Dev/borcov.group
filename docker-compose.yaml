@@ -1,3 +1,6 @@
+volumes:
+  postgres_data:
+
 services:
 
   app:
@@ -30,5 +33,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 

@@ -47,6 +47,12 @@ Build and deploy a Yii2 marketing keyword automation platform with import, clean
 ## Next Steps
 - Phase 7: ExportService + export history UI
 
+## Known Fixes Applied (c3ee2a2)
+1. **checkAlreadyUsed()** — now JOINs `sources` table, matches only `source.type = 'gads'` (was: any previous batch any source). Non-gads keywords with same text no longer trigger already_used.
+2. **regenerateForGroup()** — now uses first keyword only (3 ads per group) matching `groupAll()` behavior. Always deletes old ads before regenerating.
+3. **Migration m260703_000010** — cleanup excess ads: keeps only 3 per group.
+4. **Tests:** 3 new already_used tests. Total: 110 tests, 209 assertions.
+
 ## Critical Context
 - All endpoints live: `/gap-analysis/index` → 302 (auth), `/ad-groups/index` → 302 (auth), `/site/login` → 200
 - Test suite: **105 tests, 196 assertions**. PHPStan: **0 errors** (level 5)
