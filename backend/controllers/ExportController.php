@@ -52,8 +52,20 @@ class ExportController extends Controller
 
     public function actionCreate(): Response
     {
+        $exportAll = Yii::$app->request->post('export_all') === '1';
+        $adIds = Yii::$app->request->post('ad_ids');
+
         $service = new ExportService();
-        [$filePath, $adsCount, $keywordsCount] = $service->export();
+
+        if ($exportAll) {
+            [$filePath, $adsCount, $keywordsCount] = $service->export();
+        } elseif (is_array($adIds) && $adIds !== []) {
+            $adIds = array_map('intval', $adIds);
+            [$filePath, $adsCount, $keywordsCount] = $service->exportSelected($adIds);
+        } else {
+            Yii::$app->session->setFlash('warning', Yii::t('app', 'export.no_selection'));
+            return $this->redirect(['index']);
+        }
 
         if ($adsCount === 0) {
             Yii::$app->session->setFlash('warning', Yii::t('app', 'export.nothing_to_export'));

@@ -232,11 +232,19 @@ return [
 
     // Export
     'export.title' => 'Экспорт',
-    'export.description' => 'Генерация CSV для Google Ads Editor со всеми черновиками объявлений. После экспорта объявления помечаются как экспортированные.',
+    'export.description' => 'Генерация CSV для Google Ads Editor с выбранными или всеми черновиками объявлений. После экспорта объявления помечаются как экспортированные.',
     'export.create_btn' => 'Экспортировать все черновики',
     'export.confirm' => 'Сгенерировать CSV-экспорт всех черновиков? Объявления будут помечены как экспортированные.',
     'export.success' => 'Экспорт завершён: {ads} объявлений, {keywords} ключевых слов.',
+    'export.select_ads' => 'Выберите объявления для экспорта',
+    'export.total_draft' => 'черновиков',
+    'export.select_all' => 'Выбрать все',
+    'export.deselect_all' => 'Снять все',
+    'export.selected' => 'выбрано',
+    'export.export_selected' => 'Экспортировать выбранные',
+    'export.export_all' => 'Экспортировать все черновики',
     'export.nothing_to_export' => 'Нет черновиков для экспорта.',
+    'export.no_selection' => 'Объявления не выбраны для экспорта.',
     'export.not_found' => 'Файл экспорта не найден.',
     'export.exported_at' => 'Дата экспорта',
     'export.ads_count' => 'Объявлений',
@@ -246,6 +254,7 @@ return [
     'export.ad_group' => 'Группа',
     'export.headline' => 'Заголовок',
     'export.description_col' => 'Описание',
+    'export.generator_col' => 'Генератор',
     'export.history_title' => 'История экспортов',
     'export.empty_hint' => 'Объявления для экспорта ещё не созданы. Перейдите в Группы объявлений → Сгенерировать группы и объявления.',
 ];

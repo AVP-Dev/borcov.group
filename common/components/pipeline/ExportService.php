@@ -14,6 +14,24 @@ class ExportService
     private const string CAMPAIGN_PREFIX = 'site.pro';
 
     /**
+     * @param int[] $adIds
+     * @return array{string, int, int} [filePath, adsCount, keywordsCount]
+     */
+    public function exportSelected(array $adIds): array
+    {
+        $ads = Ad::find()
+            ->where(['id' => $adIds, 'status' => Ad::STATUS_DRAFT])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+
+        if ($ads === []) {
+            return ['', 0, 0];
+        }
+
+        return $this->doExport($ads);
+    }
+
+    /**
      * @return array{string, int, int} [filePath, adsCount, keywordsCount]
      */
     public function export(): array
@@ -31,6 +49,15 @@ class ExportService
             ->where(['id' => $draftAdIds])
             ->orderBy(['id' => SORT_ASC])
             ->all();
+
+        return $this->doExport($ads);
+    }
+
+    /**
+     * @param Ad[] $ads
+     * @return array{string, int, int} [filePath, adsCount, keywordsCount]
+     */
+    private function doExport(array $ads): array
 
         $exportDir = Yii::getAlias('@common/runtime/exports');
         if (!is_dir($exportDir)) {
@@ -108,9 +135,10 @@ class ExportService
 
         fclose($handle);
 
+        $exportedIds = array_map(fn(Ad $ad) => $ad->id, $ads);
         Ad::updateAll(
             ['status' => Ad::STATUS_EXPORTED],
-            ['id' => $draftAdIds],
+            ['id' => $exportedIds],
         );
 
         $batch = new ExportBatch();

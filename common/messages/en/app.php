@@ -232,11 +232,19 @@ return [
 
     // Export
     'export.title' => 'Export',
-    'export.description' => 'Generate Google Ads Editor CSV with all draft ads. After export, ads are marked as exported.',
+    'export.description' => 'Generate Google Ads Editor CSV with selected or all draft ads. After export, ads are marked as exported.',
     'export.create_btn' => 'Export All Draft Ads',
     'export.confirm' => 'Generate CSV export of all draft ads? Ads will be marked as exported.',
     'export.success' => 'Export complete: {ads} ads, {keywords} keywords.',
+    'export.select_ads' => 'Select ads to export',
+    'export.total_draft' => 'draft ads',
+    'export.select_all' => 'Select all',
+    'export.deselect_all' => 'Deselect all',
+    'export.selected' => 'selected',
+    'export.export_selected' => 'Export Selected',
+    'export.export_all' => 'Export All Drafts',
     'export.nothing_to_export' => 'No draft ads to export.',
+    'export.no_selection' => 'No ads selected for export.',
     'export.not_found' => 'Export file not found.',
     'export.exported_at' => 'Exported At',
     'export.ads_count' => 'Ads',
@@ -246,6 +254,7 @@ return [
     'export.ad_group' => 'Ad Group',
     'export.headline' => 'Headline',
     'export.description_col' => 'Description',
+    'export.generator_col' => 'Generator',
     'export.history_title' => 'Export History',
     'export.empty_hint' => 'No ads to export yet. Go to Ad Groups → Generate Groups & Ads first.',
 ];

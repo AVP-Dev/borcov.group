@@ -7,6 +7,7 @@ declare(strict_types=1);
  * @var \yii\data\ActiveDataProvider $dataProvider
  * @var \yii\data\ActiveDataProvider $adsProvider
  * @var int $draftAdsCount
+ * @var array $groupStats
  */
 
 use common\models\Ad;
@@ -19,60 +20,64 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="export-index">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0"><?= Html::encode($this->title) ?></h1>
-        <div>
-            <?php if ($draftAdsCount > 0): ?>
-                <?= Html::a(
-                    Yii::t('app', 'export.create_btn') . " ({$draftAdsCount})",
-                    ['create'],
-                    [
-                        'class' => 'btn btn-primary',
-                        'data-method' => 'post',
-                        'data-confirm' => Yii::t('app', 'export.confirm'),
-                        'id' => 'export-btn',
-                    ],
-               ) ?>
-            <?php else: ?>
-                <button class="btn btn-secondary" disabled>
-                    <?= Yii::t('app', 'export.nothing_to_export') ?>
-                </button>
-            <?php endif; ?>
-        </div>
     </div>
+
+    <p class="text-muted"><?= Yii::t('app', 'export.description') ?></p>
 
     <?php if ($draftAdsCount > 0): ?>
         <div class="card mb-4">
-            <div class="card-header bg-transparent fw-semibold">
-                <?= Yii::t('app', 'export.draft_ads_title') ?> (<?= $draftAdsCount ?>)
+            <div class="card-header bg-transparent fw-semibold d-flex justify-content-between align-items-center">
+                <span><?= Yii::t('app', 'export.select_ads') ?></span>
+                <span class="badge bg-primary"><?= $draftAdsCount ?> <?= Yii::t('app', 'export.total_draft') ?></span>
             </div>
-            <div class="card-body p-0">
-                <?= GridView::widget([
-                    'dataProvider' => $adsProvider,
-                    'tableOptions' => ['class' => 'table table-hover mb-0'],
-                    'columns' => [
-                        'id',
-                        [
-                            'attribute' => 'adGroup.theme_label',
-                            'label' => Yii::t('app', 'export.ad_group'),
-                            'value' => fn(Ad $ad) => $ad->adGroup?->theme_label ?? '—',
-                        ],
-                        [
-                            'attribute' => 'headline_1',
-                            'label' => Yii::t('app', 'export.headline'),
-                            'value' => fn(Ad $ad) => mb_substr($ad->headline_1, 0, 25) . (mb_strlen($ad->headline_1) > 25 ? '...' : ''),
-                        ],
-                        [
-                            'attribute' => 'headline_2',
-                            'label' => Yii::t('app', 'export.headline') . ' 2',
-                            'value' => fn(Ad $ad) => mb_substr($ad->headline_2, 0, 25) . (mb_strlen($ad->headline_2) > 25 ? '...' : ''),
-                        ],
-                        [
-                            'attribute' => 'description_1',
-                            'label' => Yii::t('app', 'export.description_col'),
-                            'value' => fn(Ad $ad) => mb_substr($ad->description_1, 0, 40) . (mb_strlen($ad->description_1) > 40 ? '...' : ''),
-                        ],
-                        'generator',
-                    ],
-                ]) ?>
+            <div class="card-body">
+                <?= Html::beginForm(['create'], 'post', ['id' => 'export-form']) ?>
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="select-all"><?= Yii::t('app', 'export.select_all') ?></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="deselect-all"><?= Yii::t('app', 'export.deselect_all') ?></button>
+                    <span class="ms-2 text-muted" id="selected-count">0 <?= Yii::t('app', 'export.selected') ?></span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="check-all"></th>
+                                <th><?= Yii::t('app', 'export.ad_group') ?></th>
+                                <th><?= Yii::t('app', 'export.headline') ?> 1</th>
+                                <th><?= Yii::t('app', 'export.headline') ?> 2</th>
+                                <th><?= Yii::t('app', 'export.description_col') ?></th>
+                                <th><?= Yii::t('app', 'export.generator_col') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($adsProvider->getModels() as $ad): ?>
+                                <tr>
+                                    <td><input type="checkbox" name="ad_ids[]" value="<?= $ad->id ?>" class="ad-check"></td>
+                                    <td><small class="text-muted"><?= Html::encode($ad->adGroup?->theme_label ?? '—') ?></small></td>
+                                    <td><?= Html::encode(mb_substr($ad->headline_1, 0, 30)) ?></td>
+                                    <td><?= Html::encode(mb_substr($ad->headline_2, 0, 30)) ?></td>
+                                    <td><small><?= Html::encode(mb_substr($ad->description_1, 0, 50)) ?></small></td>
+                                    <td><span class="badge bg-<?= $ad->generator === 'template' ? 'secondary' : 'info' ?>"><?= Html::encode($ad->generator) ?></span></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <?= Html::submitButton(
+                        Yii::t('app', 'export.export_selected'),
+                        ['class' => 'btn btn-primary', 'id' => 'export-btn', 'disabled' => true],
+                    ) ?>
+                    <?= Html::submitButton(
+                        Yii::t('app', 'export.export_all'),
+                        ['class' => 'btn btn-outline-primary', 'name' => 'export_all', 'value' => '1'],
+                    ) ?>
+                </div>
+
+                <?= Html::endForm() ?>
             </div>
         </div>
     <?php else: ?>
@@ -117,9 +122,42 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 $this->registerJs(<<<JS
-document.getElementById('export-btn')?.addEventListener('click', function(e) {
+const checkAll = document.getElementById('check-all');
+const adChecks = document.querySelectorAll('.ad-check');
+const selectAllBtn = document.getElementById('select-all');
+const deselectAllBtn = document.getElementById('deselect-all');
+const selectedCount = document.getElementById('selected-count');
+const exportBtn = document.getElementById('export-btn');
+
+function updateCount() {
+    const count = document.querySelectorAll('.ad-check:checked').length;
+    selectedCount.textContent = count + ' <?= Yii::t('app', 'export.selected') ?>';
+    exportBtn.disabled = count === 0;
+}
+
+checkAll?.addEventListener('change', function() {
+    adChecks.forEach(cb => cb.checked = this.checked);
+    updateCount();
+});
+
+adChecks.forEach(cb => cb.addEventListener('change', updateCount));
+
+selectAllBtn?.addEventListener('click', function() {
+    adChecks.forEach(cb => cb.checked = true);
+    checkAll.checked = true;
+    updateCount();
+});
+
+deselectAllBtn?.addEventListener('click', function() {
+    adChecks.forEach(cb => cb.checked = false);
+    checkAll.checked = false;
+    updateCount();
+});
+
+document.getElementById('export-btn')?.addEventListener('click', function() {
+    if (!this.form.checkValidity()) return;
     this.classList.add('disabled');
-    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> ' + this.textContent.trim();
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Exporting...';
 });
 JS);
 ?>
