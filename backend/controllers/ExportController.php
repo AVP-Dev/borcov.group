@@ -38,9 +38,8 @@ class ExportController extends Controller
 
         $adsProvider = new ActiveDataProvider([
             'query' => \common\models\Ad::find()
-                ->joinWith(['adGroup'])
-                ->where(['ad.status' => \common\models\Ad::STATUS_DRAFT])
-                ->orderBy(['ad.id' => SORT_ASC]),
+                ->where(['status' => \common\models\Ad::STATUS_DRAFT])
+                ->orderBy(['id' => SORT_ASC]),
             'pagination' => ['pageSize' => 50],
         ]);
 
