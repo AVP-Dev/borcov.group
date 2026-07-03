@@ -23,7 +23,12 @@ class CsvAdapter extends BaseObject implements SourceAdapterInterface
     public bool $autoDetectKeyword = true;
 
     /**
-     * @var int maximum sample rows to check for keyword auto-detection
+     * @var bool if true, auto-detect volume column when no known name matches
+     */
+    public bool $autoDetectVolume = true;
+
+    /**
+     * @var int maximum sample rows to check for auto-detection
      */
     public int $autoDetectSampleRows = 5;
 
@@ -44,10 +49,8 @@ class CsvAdapter extends BaseObject implements SourceAdapterInterface
             $header = array_map('trim', $header);
 
             // Strip UTF-8 BOM from first column
-            if (isset($header[0])) {
-                $bom = \pack('H*', 'EFBBBF');
-                $header[0] = preg_replace("/^$bom/", '', $header[0]);
-            }
+            $bom = \pack('H*', 'EFBBBF');
+            $header[0] = preg_replace("/^$bom/", '', $header[0]);
         }
 
         $lcHeader = $header ? array_map('mb_strtolower', $header) : [];
@@ -71,6 +74,11 @@ class CsvAdapter extends BaseObject implements SourceAdapterInterface
         // Auto-detect keyword column if not found and enabled
         if ($this->autoDetectKeyword && $header !== null && $columnIndex['keyword'] === null) {
             $columnIndex['keyword'] = $this->autoDetectKeywordColumn($handle, $header);
+        }
+
+        // Auto-detect volume column if not found and enabled
+        if ($this->autoDetectVolume && $header !== null && $columnIndex['volume'] === null) {
+            $columnIndex['volume'] = $this->autoDetectVolumeColumn($handle, $header, $columnIndex['keyword']);
         }
 
         $lineNum = $this->hasHeader ? 1 : 0;
@@ -163,6 +171,80 @@ class CsvAdapter extends BaseObject implements SourceAdapterInterface
             for ($i = 0; $i < $colCount; $i++) {
                 $val = $row[$i] ?? '';
                 if ($val !== '' && preg_match('/\p{L}/u', $val)) {
+                    return $i;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Try to find the volume column by examining data in each column.
+     * Looks for a column where most values are positive integers (looks like search volume).
+     * Skips the keyword column.
+     */
+    private function autoDetectVolumeColumn($handle, array $header, ?int $keywordCol): ?int
+    {
+        $samples = [];
+        $readCount = 0;
+        while (($row = fgetcsv($handle, 0, $this->delimiter, $this->enclosure, $this->escape)) !== false && $readCount < $this->autoDetectSampleRows) {
+            $samples[] = array_map('trim', $row);
+            $readCount++;
+        }
+
+        if ($samples === []) {
+            return null;
+        }
+
+        $colCount = count($header);
+        $scores = array_fill(0, $colCount, 0);
+
+        foreach ($samples as $row) {
+            for ($i = 0; $i < $colCount; $i++) {
+                if ($i === $keywordCol) {
+                    continue; // skip keyword column
+                }
+                $val = $row[$i] ?? '';
+                if ($val === '') {
+                    continue;
+                }
+                // +1 for purely numeric (volume-like)
+                if (preg_match('/^\d+$/', $val)) {
+                    $scores[$i]++;
+                }
+                // +1 for formatted numbers like 1,200 or 12 500
+                if (preg_match('/^[\d,._ ]+$/', $val) && preg_match('/[\d]{3,}/', $val)) {
+                    $scores[$i]++;
+                }
+                // -2 for text with letters (not volume)
+                if (preg_match('/\p{L}/u', $val)) {
+                    $scores[$i] -= 2;
+                }
+                // -2 for decimal numbers (CTR, CPC — not volume)
+                if (preg_match('/^\.\d+|\d+\.\d+$/', $val)) {
+                    $scores[$i] -= 2;
+                }
+            }
+        }
+
+        // Pick column with highest score, minimum score of 1
+        arsort($scores);
+        $bestScore = reset($scores);
+        $bestCol = key($scores);
+
+        if ($bestScore >= 1) {
+            return (int)$bestCol;
+        }
+
+        // Fallback: first numeric column that isn't keyword
+        foreach ($samples as $row) {
+            for ($i = 0; $i < $colCount; $i++) {
+                if ($i === $keywordCol) {
+                    continue;
+                }
+                $val = $row[$i] ?? '';
+                if ($val !== '' && preg_match('/^\d+$/', $val)) {
                     return $i;
                 }
             }

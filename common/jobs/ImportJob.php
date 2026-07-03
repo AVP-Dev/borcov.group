@@ -173,8 +173,8 @@ class ImportJob extends BaseObject implements JobInterface
             'gads' => new CsvAdapter([
                 'delimiter' => ',',
                 'columnMap' => [
-                    'keyword' => ['Keyword', 'keyword', 'Search term', 'Keyword text', 'Key phrase'],
-                    'volume' => ['Volume', 'volume', 'Avg. monthly searches', 'Impressions', 'impressions'],
+                    'keyword' => ['Keyword', 'keyword', 'Search term', 'Search keyword', 'Keyword text', 'Key phrase', 'Query'],
+                    'volume' => ['Impressions', 'impressions', 'Impr.', 'Clicks', 'clicks', 'Conversions', 'Cost', 'Volume', 'volume', 'Avg. monthly searches'],
                 ],
             ]),
             'ahrefs_organic' => new CsvAdapter([
