@@ -89,15 +89,24 @@ class SiteController extends Controller
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $user = \common\models\User::findByUsername('admin');
-        if ($user === null) {
-            return $this->asJson(['exists' => false, 'error' => 'User not found']);
+        $db = Yii::$app->db;
+        $dsn = '';
+        try {
+            $dsn = $db->dsn;
+        } catch (\Throwable $e) {
+            $dsn = 'ERROR: ' . $e->getMessage();
         }
-        return $this->asJson([
-            'exists' => true,
-            'has_password_hash' => !empty($user->password_hash),
-            'hash_prefix' => substr($user->password_hash, 0, 10) . '...',
-            'status' => $user->status,
-        ]);
+        $result = [
+            'exists' => false,
+            'dsn' => $dsn,
+        ];
+        if ($user !== null) {
+            $result['exists'] = true;
+            $result['has_password_hash'] = !empty($user->password_hash);
+            $result['hash_prefix'] = substr($user->password_hash ?? '', 0, 10) . '...';
+            $result['status'] = $user->status;
+        }
+        return $this->asJson($result);
     }
 
     /**

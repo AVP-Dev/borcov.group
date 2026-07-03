@@ -40,6 +40,9 @@ class AdminController extends Controller
 
     public function actionCheckPassword(string $password): int
     {
+        $db = Yii::$app->db;
+        echo "DB DSN: {$db->dsn}\n";
+
         $user = User::findByUsername('admin');
 
         if ($user === null) {
