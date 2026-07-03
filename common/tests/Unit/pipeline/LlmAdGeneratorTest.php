@@ -138,4 +138,40 @@ final class LlmAdGeneratorTest extends Unit
         verify(mb_strlen($ads[0]->description1) <= AdGeneratorInterface::MAX_DESCRIPTION_LENGTH);
         verify($ads[0]->path1)->stringContainsString('website-builder');
     }
+
+    public function testLongDescriptionPassesFullTextToModel(): void
+    {
+        $longDesc = 'Launch your professional website quickly with Site.pro. No coding skills required. Start building your online presence today with our easy drag-and-drop tools.';
+        verify(mb_strlen($longDesc))->greaterThan(90);
+
+        $mockResponse = json_encode([
+            'choices' => [
+                [
+                    'message' => [
+                        'content' => json_encode([
+                            [
+                                'headline1' => 'Build Your Website Fast',
+                                'headline2' => 'Best Website Builder 2026',
+                                'description1' => $longDesc,
+                                'path1' => 'website-builder',
+                            ],
+                        ]),
+                    ],
+                ],
+            ],
+        ]);
+
+        $httpMock = function (string $url, array $headers, int $timeout) use ($mockResponse): array {
+            return [200, $mockResponse];
+        };
+
+        $generator = new LlmAdGenerator(null, $httpMock);
+        $ads = $generator->generate($this->group, $this->keyword);
+
+        verify(count($ads) === 3);
+        verify($ads[0]->source)->equals(AdData::SOURCE_LLM);
+        // Generator passes full text without mid-word truncation — model handles it
+        verify($ads[0]->description1)->equals($longDesc);
+        verify($ads[0]->description1)->stringContainsString('drag-and-drop');
+    }
 }
