@@ -4,13 +4,23 @@ declare(strict_types=1);
 
 namespace common\components\pipeline;
 
+use common\models\Keyword;
+use common\models\Setting;
 use Yii;
 use yii\base\Component;
-use common\models\Keyword;
 
 class DeduplicationService extends Component
 {
     public float $similarityThreshold = 0.6;
+
+    public function __construct($config = [])
+    {
+        parent::__construct($config);
+        $dbValue = Setting::get('pipeline.dedup.similarity_threshold');
+        if ($dbValue !== '') {
+            $this->similarityThreshold = (float)$dbValue;
+        }
+    }
 
     public function deduplicate(int $batchId): int
     {
