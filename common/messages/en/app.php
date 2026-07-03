@@ -99,6 +99,8 @@ return [
     'import.error.cannot_hash' => 'Cannot compute file hash',
     'import.error.save_batch' => 'Failed to save import batch',
     'import.error.invalid_file' => 'Invalid or unreadable file',
+    'import.error.invalid_extension' => 'Only .csv and .json files are allowed',
+    'import.error.file_too_large' => 'File exceeds maximum size ({size})',
     'import.error.no_keywords' => 'No valid keywords found in file',
     'import.status.processing' => 'Processing',
     'import.status.done' => 'Done',

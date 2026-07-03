@@ -53,12 +53,25 @@ class ImportController extends Controller
             return $this->redirect(['/import/index']);
         }
 
+        $allowedExts = ['csv', 'json'];
+        $ext = strtolower($file->extension);
+        if (!in_array($ext, $allowedExts, true)) {
+            Yii::$app->session->setFlash('error', Yii::t('app', 'import.error.invalid_extension'));
+            return $this->redirect(['/import/index']);
+        }
+
+        $maxSize = 20 * 1024 * 1024;
+        if ($file->size > $maxSize) {
+            Yii::$app->session->setFlash('error', Yii::t('app', 'import.error.file_too_large', ['size' => '20MB']));
+            return $this->redirect(['/import/index']);
+        }
+
         $tmpPath = Yii::getAlias('@runtime') . '/uploads';
         if (!is_dir($tmpPath)) {
             mkdir($tmpPath, 0775, true);
         }
 
-        $filePath = $tmpPath . '/' . uniqid('import_') . '.' . $file->extension;
+        $filePath = $tmpPath . '/' . uniqid('import_') . '.' . $ext;
         if (!$file->saveAs($filePath)) {
             Yii::$app->session->setFlash('error', Yii::t('app', 'import.error.invalid_file'));
             return $this->redirect(['/import/index']);

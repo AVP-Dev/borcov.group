@@ -33,6 +33,8 @@ return [
             'tableName' => '{{%queue}}',
             'channel' => 'default',
             'mutex' => \yii\mutex\PgsqlMutex::class,
+            'ttr' => 300,
+            'attempts' => 3,
         ],
     ],
 ];

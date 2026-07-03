@@ -24,9 +24,11 @@ class ImportJob extends BaseObject implements JobInterface
         try {
             $this->doExecute($queue);
         } catch (\Throwable $e) {
+            Yii::error("ImportJob #{$this->batchId} failed: " . $e->getMessage(), __METHOD__);
             $batch = ImportBatch::findOne($this->batchId);
-            if ($batch !== null) {
-                $this->failBatch($batch, $e->getMessage());
+            if ($batch !== null && $batch->status !== ImportBatch::STATUS_DONE) {
+                $batch->rows_rejected = $batch->rows_total;
+                $this->failBatch($batch, mb_substr($e->getMessage(), 0, 500));
             }
             throw $e;
         }
@@ -96,9 +98,18 @@ class ImportJob extends BaseObject implements JobInterface
         $batch->status = ImportBatch::STATUS_DONE;
         $batch->save();
 
+        $this->cleanupTempFile();
+
         Yii::$app->queue->push(new CleanJob([
             'batchId' => (int)$batch->id,
         ]));
+    }
+
+    private function cleanupTempFile(): void
+    {
+        if ($this->filePath !== '' && file_exists($this->filePath)) {
+            @unlink($this->filePath);
+        }
     }
 
     private function createAdapter(string $sourceType): SourceAdapterInterface

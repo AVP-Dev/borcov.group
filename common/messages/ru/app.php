@@ -99,6 +99,8 @@ return [
     'import.error.cannot_hash' => 'Не удалось вычислить хеш файла',
     'import.error.save_batch' => 'Не удалось сохранить запись импорта',
     'import.error.invalid_file' => 'Некорректный или нечитаемый файл',
+    'import.error.invalid_extension' => 'Только .csv и .json файлы',
+    'import.error.file_too_large' => 'Файл превышает максимальный размер ({size})',
     'import.error.no_keywords' => 'В файле не найдено ключевых слов',
     'import.status.processing' => 'Обработка',
     'import.status.done' => 'Завершён',

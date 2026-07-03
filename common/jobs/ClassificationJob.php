@@ -17,6 +17,16 @@ class ClassificationJob extends BaseObject implements JobInterface
 
     public function execute($queue): void
     {
+        try {
+            $this->doExecute($queue);
+        } catch (\Throwable $e) {
+            Yii::error("ClassificationJob #{$this->batchId} failed: " . $e->getMessage(), __METHOD__);
+            throw $e;
+        }
+    }
+
+    private function doExecute($queue): void
+    {
         $batch = ImportBatch::findOne($this->batchId);
         if ($batch === null) {
             throw new \RuntimeException("ImportBatch #{$this->batchId} not found");
