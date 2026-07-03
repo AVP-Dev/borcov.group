@@ -48,12 +48,26 @@ class ImportJob extends BaseObject implements JobInterface
         }
 
         $adapter = $this->createAdapter($source->type);
+        $ext = strtolower(pathinfo($this->filePath, PATHINFO_EXTENSION));
         $db = Yii::$app->db;
         $total = 0;
         $accepted = 0;
         $rejected = 0;
         $firstRow = [];
         $firstRowSample = '';
+        $actualHeaders = '';
+
+        // Read actual CSV headers for better debugging
+        if ($ext === 'csv' && is_readable($this->filePath)) {
+            $handle = fopen($this->filePath, 'rb');
+            if ($handle) {
+                $rawHeader = fgets($handle, 4096);
+                if ($rawHeader !== false) {
+                    $actualHeaders = trim($rawHeader);
+                }
+                fclose($handle);
+            }
+        }
 
         foreach ($adapter->parse($this->filePath) as $row) {
             $total++;
@@ -106,9 +120,12 @@ class ImportJob extends BaseObject implements JobInterface
         $batch->rows_rejected = $rejected;
 
         if ($total > 0 && $accepted === 0) {
-            $msg = 'All ' . $total . ' rows rejected: no keyword column found in file. ';
-            $msg .= 'Available mapped keys: ' . implode(', ', $firstRow) . '. ';
-            $msg .= 'First row sample: ' . $firstRowSample;
+            $msg = 'All ' . $total . ' rows rejected: no keyword column found. ';
+            if ($actualHeaders !== '') {
+                $msg .= 'CSV headers: ' . mb_substr($actualHeaders, 0, 500) . '. ';
+            }
+            $msg .= 'Mapped: ' . implode(', ', $firstRow) . '. ';
+            $msg .= 'Sample: ' . $firstRowSample;
             $this->failBatch($batch, $msg);
             $this->cleanupTempFile();
             return;
@@ -201,10 +218,11 @@ class ImportJob extends BaseObject implements JobInterface
     }
 
     /**
-     * Parse volume string into nullable integer.
-     * Handles: "1,200", "12 500", "1.2K", "1.5M", "N/A", "-", ""
+     * Parse volume value into nullable integer.
+     * Accepts string, int, or null.
+     * Handles: "1,200", "12 500", "1.2K", "1.5M", "N/A", "-", "", 12345
      */
-    private function parseVolume(?string $raw): ?int
+    private function parseVolume(mixed $raw): ?int
     {
         if ($raw === null || $raw === '' || $raw === '-' || strtoupper($raw) === 'N/A') {
             return null;
