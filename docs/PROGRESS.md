@@ -363,21 +363,17 @@ ImportJob (upsert, hash idempotency)
 
 ## Что осталось по BRIEF.md
 
-### 🔴 Settings page (§4)
-Редактирование через UI:
-- Volume threshold (`pipeline.volume.min`)
-- Forbidden terms (список/match_type)
-- Brand terms (свои и конкуренты)
+### Settings page (§4)
+- Volume threshold — поле в General settings
+- Forbidden terms — CRUD (add/delete) с match_type (exact/contains/regex)
+- Brand terms — CRUD с is_own_brand (свой бренд / конкурент)
+- Pipeline (`VolumeFilterService`, `DeduplicationService`) читает настройки из БД
+- **Статус:** ✅ сделано, задеплоено
 
-**Статус:** не начато. Сейчас всё через миграции/консоль.
-
-### 🔴 README (§6)
-Билингвальная документация (EN + RU), обязательна по BRIEF.md §6.
-Должна включать:
-- Архитектура и логика
-- Ссылка на живой URL
-- Vibecoding Log (хронология)
-- Roadmap
+### README (§6)
+- Билингвальная документация EN + RU
+- Архитектура, схема пайплайна, ссылка на URL, Vibecoding Log, Roadmap
+- **Статус:** ✅ сделано
 
 ---
 
