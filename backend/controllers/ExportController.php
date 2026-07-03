@@ -34,8 +34,20 @@ class ExportController extends Controller
             'pagination' => ['pageSize' => 20],
         ]);
 
+        $draftAdsCount = \common\models\Ad::find()->where(['status' => \common\models\Ad::STATUS_DRAFT])->count();
+
+        $adsProvider = new ActiveDataProvider([
+            'query' => \common\models\Ad::find()
+                ->joinWith(['adGroup'])
+                ->where(['ad.status' => \common\models\Ad::STATUS_DRAFT])
+                ->orderBy(['ad.id' => SORT_ASC]),
+            'pagination' => ['pageSize' => 50],
+        ]);
+
         return $this->render('index', [
             'dataProvider' => $dataProvider,
+            'adsProvider' => $adsProvider,
+            'draftAdsCount' => $draftAdsCount,
         ]);
     }
 

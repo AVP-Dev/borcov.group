@@ -242,4 +242,10 @@ return [
     'export.ads_count' => 'Объявлений',
     'export.keywords_count' => 'Ключевых слов',
     'export.download' => 'Скачать',
+    'export.draft_ads_title' => 'Объявления готовые к экспорту',
+    'export.ad_group' => 'Группа',
+    'export.headline' => 'Заголовок',
+    'export.description_col' => 'Описание',
+    'export.history_title' => 'История экспортов',
+    'export.empty_hint' => 'Объявления для экспорта ещё не созданы. Перейдите в Группы объявлений → Сгенерировать группы и объявления.',
 ];

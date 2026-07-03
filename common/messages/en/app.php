@@ -242,4 +242,10 @@ return [
     'export.ads_count' => 'Ads',
     'export.keywords_count' => 'Keywords',
     'export.download' => 'Download',
+    'export.draft_ads_title' => 'Ads ready to export',
+    'export.ad_group' => 'Ad Group',
+    'export.headline' => 'Headline',
+    'export.description_col' => 'Description',
+    'export.history_title' => 'Export History',
+    'export.empty_hint' => 'No ads to export yet. Go to Ad Groups → Generate Groups & Ads first.',
 ];
