@@ -38,7 +38,7 @@ $dataProvider = new ArrayDataProvider([
                     <?= Html::a(
                         Yii::t('app', 'gap.refresh'),
                         ['/gap-analysis/index'],
-                        ['class' => 'btn btn-primary']
+                        ['class' => 'btn btn-primary', 'id' => 'gap-refresh-btn']
                     ) ?>
                 </div>
             </div>
@@ -101,3 +101,12 @@ $dataProvider = new ArrayDataProvider([
         ]) ?>
     <?php endif; ?>
 </div>
+
+<?php
+$this->registerJs(<<<'JS'
+document.getElementById('gap-refresh-btn')?.addEventListener('click', function(e) {
+    this.classList.add('disabled');
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> ' + this.textContent.trim();
+});
+JS);
+?>
