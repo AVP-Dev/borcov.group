@@ -55,6 +55,13 @@ file_put_contents('${cfg}', \$config);
 done
 echo "[3/5] cookieValidationKey injected"
 
+# Verify key was actually written (debug)
+php -r "
+\$cfg = file_get_contents('${BACKEND_CONFIG}');
+preg_match(\"/'cookieValidationKey'\\s*=>\\s*'([^']+)'/\", \$cfg, \$m);
+echo '      Key in config: ' . (\$m[1] ? substr(\$m[1], 0, 12) . '...' : 'NOT FOUND!') . PHP_EOL;
+"
+
 # -------------------------------------------------------
 # 3b. Patch index.php to read YII_DEBUG and YII_ENV from env vars
 # -------------------------------------------------------
