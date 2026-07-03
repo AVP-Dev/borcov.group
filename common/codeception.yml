@@ -25,3 +25,5 @@ coverage:
         - /mail/*
         - /models/*
         - /widgets/*
+        - /components/pipeline/*
+        - /jobs/*

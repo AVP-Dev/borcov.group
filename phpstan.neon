@@ -8,6 +8,9 @@ parameters:
         - backend/views
         - backend/tests/Functional
         - backend/tests/Unit
+        - common/bootstrap
+        - common/components/pipeline
+        - common/jobs
         - common/mail
         - common/models
         - common/widgets
@@ -39,5 +42,7 @@ parameters:
 
     ignoreErrors:
         - '#Access to an undefined property yii\\web\\IdentityInterface::\$username.#'
+        - '#Access to an undefined property common\\models\\\w+::\$#'
+        - '#Access to an undefined property .*::\$queue#'
 
     tmpDir: %currentWorkingDirectory%/runtime
