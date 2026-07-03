@@ -52,12 +52,14 @@ class ImportJob extends BaseObject implements JobInterface
         $total = 0;
         $accepted = 0;
         $rejected = 0;
-        $firstRowKeys = [];
+        $firstRow = [];
+        $firstRowSample = '';
 
         foreach ($adapter->parse($this->filePath) as $row) {
             $total++;
             if ($total === 1) {
-                $firstRowKeys = array_keys($row);
+                $firstRow = array_keys($row);
+                $firstRowSample = json_encode($row, JSON_UNESCAPED_UNICODE);
             }
 
             $rawText = trim($row['keyword'] ?? '');
@@ -104,7 +106,10 @@ class ImportJob extends BaseObject implements JobInterface
         $batch->rows_rejected = $rejected;
 
         if ($total > 0 && $accepted === 0) {
-            $this->failBatch($batch, 'All ' . $total . ' rows rejected — no keyword column. Available: ' . implode(', ', $firstRowKeys));
+            $msg = 'All ' . $total . ' rows rejected: no keyword column found in file. ';
+            $msg .= 'Available mapped keys: ' . implode(', ', $firstRow) . '. ';
+            $msg .= 'First row sample: ' . $firstRowSample;
+            $this->failBatch($batch, $msg);
             $this->cleanupTempFile();
             return;
         }
