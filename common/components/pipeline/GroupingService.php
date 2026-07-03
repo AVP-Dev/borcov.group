@@ -106,22 +106,25 @@ class GroupingService
 
         \common\models\Ad::deleteAll(['ad_group_id' => $adGroupId]);
 
+        $firstKw = $group->keywords[0] ?? null;
+        if ($firstKw === null) {
+            return 0;
+        }
+
         $count = 0;
-        foreach ($group->keywords as $kw) {
-            $ads = $this->generator->generate($group, $kw);
-            foreach ($ads as $adData) {
-                $ad = new \common\models\Ad();
-                $ad->ad_group_id = $group->id;
-                $ad->headline_1 = $adData->headline1;
-                $ad->headline_2 = $adData->headline2;
-                $ad->description_1 = $adData->description1;
-                $ad->final_url = $adData->finalUrl;
-                $ad->path_1 = $adData->path1;
-                $ad->path_2 = $adData->path2;
-                $ad->generator = $adData->source;
-                $ad->save();
-                $count++;
-            }
+        $ads = $this->generator->generate($group, $firstKw);
+        foreach ($ads as $adData) {
+            $ad = new \common\models\Ad();
+            $ad->ad_group_id = $group->id;
+            $ad->headline_1 = $adData->headline1;
+            $ad->headline_2 = $adData->headline2;
+            $ad->description_1 = $adData->description1;
+            $ad->final_url = $adData->finalUrl;
+            $ad->path_1 = $adData->path1;
+            $ad->path_2 = $adData->path2;
+            $ad->generator = $adData->source;
+            $ad->save();
+            $count++;
         }
         return $count;
     }

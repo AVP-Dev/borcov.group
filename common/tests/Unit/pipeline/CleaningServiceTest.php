@@ -12,16 +12,23 @@ use common\models\ImportBatch;
 use common\models\Keyword;
 use common\models\Source;
 use common\tests\Support\UnitTester;
+use Yii;
 
 final class CleaningServiceTest extends Unit
 {
     protected UnitTester $tester;
+    private int $gadsSourceId;
+    private int $ahrefsOrganicSourceId;
+    private int $ahrefsPaidSourceId;
 
     protected function _setUp(): void
     {
         parent::_setUp();
         $this->seedBrandTerms();
         $this->seedForbiddenTerms();
+        $this->seedSources();
+        $this->seedBatch(1);
+        $this->seedBatch(2);
     }
 
     public function testPassesValidKeyword(): void
@@ -129,15 +136,102 @@ final class CleaningServiceTest extends Unit
         verify($result['passed'])->false();
     }
 
-    private function makeKeyword(string $rawText, string $normalizedText, int $batchId = 1): Keyword
+    public function testAlreadyUsedDetectsGadsKeyword(): void
+    {
+        $existing = new Keyword();
+        $existing->batch_id = 1;
+        $existing->source_id = $this->gadsSourceId;
+        $existing->raw_text = 'website builder';
+        $existing->normalized_text = 'website builder';
+        $existing->status = Keyword::STATUS_CLEANED;
+        $existing->save();
+
+        $keyword = $this->makeKeyword('website builder', 'website builder', 2);
+        $service = new CleaningService();
+        $result = $service->clean($keyword);
+
+        verify($result['passed'])->false();
+        verify($result['rejection_reason'])->stringContainsString('already_used');
+    }
+
+    public function testNonGadsKeywordDoesNotTriggerAlreadyUsed(): void
+    {
+        $existing = new Keyword();
+        $existing->batch_id = 1;
+        $existing->source_id = $this->ahrefsOrganicSourceId;
+        $existing->raw_text = 'website builder';
+        $existing->normalized_text = 'website builder';
+        $existing->status = Keyword::STATUS_CLEANED;
+        $existing->save();
+
+        $keyword = $this->makeKeyword('website builder', 'website builder', 2, $this->ahrefsPaidSourceId);
+        $service = new CleaningService();
+        $result = $service->clean($keyword);
+
+        verify($result['passed'])->true();
+        verify($result['rejection_reason'])->null();
+    }
+
+    public function testAlreadyUsedIgnoresDifferentText(): void
+    {
+        $existing = new Keyword();
+        $existing->batch_id = 1;
+        $existing->source_id = $this->gadsSourceId;
+        $existing->raw_text = 'email marketing';
+        $existing->normalized_text = 'email marketing';
+        $existing->status = Keyword::STATUS_CLEANED;
+        $existing->save();
+
+        $keyword = $this->makeKeyword('website builder', 'website builder', 2);
+        $service = new CleaningService();
+        $result = $service->clean($keyword);
+
+        verify($result['passed'])->true();
+        verify($result['rejection_reason'])->null();
+    }
+
+    private function makeKeyword(string $rawText, string $normalizedText, int $batchId = 1, ?int $sourceId = null): Keyword
     {
         $kw = new Keyword();
         $kw->batch_id = $batchId;
-        $kw->source_id = 1;
+        $kw->source_id = $sourceId ?? $this->gadsSourceId;
         $kw->raw_text = $rawText;
         $kw->normalized_text = $normalizedText;
         $kw->status = Keyword::STATUS_RAW;
         return $kw;
+    }
+
+    private function seedSources(): void
+    {
+        $gads = Source::findOne(['type' => Source::TYPE_GADS]);
+        if ($gads !== null) {
+            $this->gadsSourceId = $gads->id;
+        } else {
+            $gads = new Source();
+            $gads->name = 'Google Ads';
+            $gads->type = Source::TYPE_GADS;
+            $gads->created_at = time();
+            $gads->save();
+            $this->gadsSourceId = $gads->id;
+        }
+
+        $this->ahrefsOrganicSourceId = Source::findOne(['type' => Source::TYPE_AHREFS_ORGANIC])?->id ?? 0;
+        $this->ahrefsPaidSourceId = Source::findOne(['type' => Source::TYPE_AHREFS_PAID])?->id ?? 0;
+    }
+
+    private function seedBatch(int $id = 1): void
+    {
+        if (ImportBatch::findOne($id) !== null) {
+            return;
+        }
+        $b = new ImportBatch();
+        $b->id = $id;
+        $b->source_id = $this->gadsSourceId;
+        $b->filename = "already_used_test_{$id}.csv";
+        $b->file_hash = "already_used_test_{$id}";
+        $b->imported_at = time();
+        $b->status = ImportBatch::STATUS_DONE;
+        $b->save();
     }
 
     private function seedBrandTerms(): void

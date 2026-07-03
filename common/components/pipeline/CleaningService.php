@@ -9,6 +9,7 @@ use yii\base\Component;
 use common\models\ForbiddenTerm;
 use common\models\BrandTerm;
 use common\models\Keyword;
+use common\models\Source;
 
 class CleaningService extends Component
 {
@@ -160,9 +161,11 @@ class CleaningService extends Component
     private function checkAlreadyUsed(Keyword $keyword): ?string
     {
         $existing = Keyword::find()
-            ->where(['normalized_text' => $keyword->normalized_text])
-            ->andWhere(['in', 'status', [Keyword::STATUS_CLEANED, Keyword::STATUS_READY]])
-            ->andWhere(['<', 'batch_id', $keyword->batch_id])
+            ->alias('k')
+            ->innerJoin(['s' => '{{%sources}}'], 'k.source_id = s.id')
+            ->where(['k.normalized_text' => $keyword->normalized_text])
+            ->andWhere(['in', 'k.status', [Keyword::STATUS_CLEANED, Keyword::STATUS_READY]])
+            ->andWhere(['s.type' => Source::TYPE_GADS])
             ->exists();
 
         return $existing ? Yii::t('app', 'clean.reason.already_used') : null;
