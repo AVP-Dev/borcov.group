@@ -61,6 +61,7 @@ return [
     // Nav
     'nav.home' => 'Главная',
     'nav.import' => 'Импорт',
+    'nav.batches' => 'История',
     'nav.keywords' => 'Ключевые слова',
     'nav.login' => 'Вход',
     'nav.logout' => 'Выход ({username})',

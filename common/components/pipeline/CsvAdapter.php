@@ -34,6 +34,8 @@ class CsvAdapter extends BaseObject implements SourceAdapterInterface
             $header = array_map('trim', $header);
         }
 
+        $lcHeader = $header ? array_map('mb_strtolower', $header) : [];
+
         $lineNum = $this->hasHeader ? 1 : 0;
         while (($row = fgetcsv($handle, 0, $this->delimiter, $this->enclosure, $this->escape)) !== false) {
             $lineNum++;
@@ -42,7 +44,8 @@ class CsvAdapter extends BaseObject implements SourceAdapterInterface
             if ($header) {
                 $assoc = [];
                 foreach ($this->columnMap as $target => $source) {
-                    $index = array_search($source, $header, true);
+                    $lcSource = mb_strtolower($source);
+                    $index = array_search($lcSource, $lcHeader, true);
                     $raw = $index !== false && isset($row[$index]) ? $row[$index] : null;
                     $assoc[$target] = ($raw !== null && $raw !== '') ? $raw : null;
                 }

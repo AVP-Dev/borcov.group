@@ -54,14 +54,10 @@ class CleanJob extends BaseObject implements JobInterface
         }
 
         $dedup = new DeduplicationService();
-        $dedupCount = $dedup->deduplicate($this->batchId);
+        $dedup->deduplicate($this->batchId);
 
         $volumeFilter = new VolumeFilterService();
-        $volumeCount = $volumeFilter->filter($this->batchId);
-
-        $batch->rows_accepted = $stats['cleaned'] - $dedupCount - $volumeCount;
-        $batch->rows_rejected = $stats['rejected'] + $dedupCount + $volumeCount;
-        $batch->save();
+        $volumeFilter->filter($this->batchId);
 
         Yii::$app->queue->push(new ClassificationJob([
             'batchId' => $this->batchId,

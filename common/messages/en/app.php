@@ -61,6 +61,7 @@ return [
     // Nav
     'nav.home' => 'Home',
     'nav.import' => 'Import',
+    'nav.batches' => 'Batches',
     'nav.keywords' => 'Keywords',
     'nav.login' => 'Login',
     'nav.logout' => 'Logout ({username})',

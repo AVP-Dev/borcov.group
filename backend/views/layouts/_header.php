@@ -20,6 +20,11 @@ $items = [
         'visible' => !Yii::$app->user->isGuest,
     ],
     [
+        'label' => Yii::t('app', 'nav.batches'),
+        'url' => ['/import/batches'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
         'label' => Yii::t('app', 'nav.keywords'),
         'url' => ['/keyword/index'],
         'visible' => !Yii::$app->user->isGuest,
