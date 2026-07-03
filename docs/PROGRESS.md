@@ -216,7 +216,7 @@
 | GroupingService | `GroupingServiceTest.php` | 4 |
 | TemplateAdGenerator | `TemplateAdGeneratorTest.php` | 5 |
 | LlmAdGenerator | `LlmAdGeneratorTest.php` | 5 |
-| **Итого** | | **128 тестов, 279 assertions** |
+| **Итого** | | **130 тестов, 286 assertions** |
 
 ### Статический анализ
 - [x] PHPStan level 5 — **0 errors**
@@ -295,34 +295,112 @@ ImportJob (upsert, hash idempotency)
 
 ---
 
-## Phase 7 — Export + History
+## Phase 7 — Export + History (iterations)
 
-### Создано
-- **ExportBatch** модель (`common/models/ExportBatch.php`) — ActiveRecord для `export_batches`
-- **ExportService** (`common/components/pipeline/ExportService.php`):
-  - Генерирует Google Ads Editor CSV: Campaign, Campaign Type, Keyword, Match Type, Headlines 1-15, Descriptions 1-4, Final URL, Path 1-2
-  - Campaign name = `{brand} — {category} — {audience} — {language}`
-  - Сохраняет файл в `@backend/runtime/exports/`
-  - Создаёт запись в `export_batches`
-  - Помечает ads как `exported`
-- **ExportController** (`backend/controllers/ExportController.php`):
-  - `actionIndex()` — страница экспорта + история
-  - `actionCreate()` — POST: генерация CSV (full или selected)
-  - `actionDownload($id)` — скачивание CSV-файла
-- **Selective Export** — чекбоксы для выбора конкретных ad, кнопки "Select All"/"Deselect All", счётчик выбранных
-- **Export View** (`backend/views/export/index.php`): форма с таблицей draft ads + GridView истории + скачивание
-- **Export Path fix** — путь изменён с `@common/runtime/exports` на `@backend/runtime/exports` (common/runtime не был доступен для записи в Docker)
-- **Null safety fix** — защита от `Error: Cannot access property on null` при пустом массиве ключей в ad group
-- **Nav menu** — ссылка "Export" добавлена
-- **i18n** — ключи `export.*` (en/ru), включая `export.select_ads`, `export.export_selected`, `export.select_all`, `export.deselect_all`, `export.selected`
+### v1 — Initial
+- **ExportBatch** модель, ExportService, ExportController, view, nav, i18n
 - **Тесты:** 4 теста (CSV заголовки, запись в БД, статус exported, пустой экспорт)
+- **Деплой подтверждён**
 
-### Деплой
-- [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login, export page, selective export, download, nav menu updated
+### v2 — Selective Export + Export Path fix
+- Чекбоксы для выбора конкретных ad, Select All/Deselect All, счётчик
+- Путь изменён с `@common/runtime/exports` на `@backend/runtime/exports` (common не был доступен для записи в Docker)
+- **Null safety fix** — защита от `null->property` при пустом массиве ключей
+- **fputcsv PHP 8.4 compat** — явный параметр `escape: ''`
+- JS фиксы (nowdoc вместо heredoc, optional chaining)
+- **Деплой подтверждён**
+
+### v3 — Grouped Export by Ad Groups
+- Экспорт переделан: показываются **Ad Groups** (а не плоский список ads)
+- Группа = категория + аудитория + язык, кол-во draft/exported ads
+- **Expandable rows** — ▶ раскрывает группу, видны все ad внутри
+- Чекбокс на группу → выбирает все ad в группе
+- Чекбокс на конкретный ad → можно выбрать 1 ad
+- **Reset to Draft** — кнопка для возврата exported ads обратно в draft
+- **Export не меняет статус** — CSV-генерация read-only
+- **ExportGroups()** — новый метод сервиса
+- Добавлены тесты: testExportGroups, testResetGroupsToDraft
+- **Деплой подтверждён**
+
+### v4 — Direct Download + Filters
+- **Save As сразу** — после клика ExportSelected/ExportAll сразу диалог сохранения, без редиректа
+- ExportBatch в истории сохраняется для reference
+- **Фильтры** — dropdown по категории и языку, onchange submit, Clear button
+- **Деплой подтверждён**
 
 ---
 
-## Что не реализовано (из BRIEF.md §§3–4)
+## Post-Phase 7 Improvements
 
-- **§4**: Settings page (volume threshold, forbidden/brand terms editors)
-- **README**: билингвальная документация (EN + RU) — требуется по BRIEF.md §6
+### DbSession — сессии в PostgreSQL
+- Сессии перенесены из файлов (`/tmp`) в БД — переживают перезапуски контейнера
+- Миграция `m260703_000011_create_session_table`
+- `backend/config/main.php`: session → `DbSession`
+
+### Deterministic cookieValidationKey
+- Ключ вычисляется из DB_HOST+DB_NAME+DB_USER+DB_PASS (стабильный)
+- Опционально: `COOKIE_VALIDATION_KEY` env var для кастомного ключа
+- Больше не генерируется `openssl rand` при каждом старте → сессии не слетают
+- Добавлен debug-вывод в entrypoint (лог: "Key in config: ...")
+
+### YII_DEBUG из env
+- `backend/web/index.php` и `frontend/web/index.php` теперь читают `YII_DEBUG` и `YII_ENV` из переменных окружения
+- Пропатчено в `entrypoint.sh`
+
+### Header redesign
+- Навигация слева (Home, Import, Keywords, Gap Analysis, Ad Groups, Export)
+- Справа: **EN/RU** → **🌙** → **|** → **🚪 Exit** (кнопка)
+- Logout убран из nav-списка, перенесён в правый угол как `btn-outline-light`
+
+### Keywords pagination fix
+- Bootstrap 5 `LinkPager` вместо дефолтного
+- `maxButtonCount = 7` — не налезают друг на друга
+- Per-page selector: 10, 20, 50, 100, 200
+- Счётчик: "1,234 всего, стр. 1/25"
+- Фильтры сохраняются при смене per-page
+
+---
+
+## Что осталось по BRIEF.md
+
+### 🔴 Settings page (§4)
+Редактирование через UI:
+- Volume threshold (`pipeline.volume.min`)
+- Forbidden terms (список/match_type)
+- Brand terms (свои и конкуренты)
+
+**Статус:** не начато. Сейчас всё через миграции/консоль.
+
+### 🔴 README (§6)
+Билингвальная документация (EN + RU), обязательна по BRIEF.md §6.
+Должна включать:
+- Архитектура и логика
+- Ссылка на живой URL
+- Vibecoding Log (хронология)
+- Roadmap
+
+---
+
+## Тестовое покрытие
+
+| Компонент | Тестов |
+|-----------|--------|
+| CsvAdapter | 9 |
+| JsonAdapter | 8 |
+| ImportService | 6 |
+| NormalizationService | 10 |
+| CleaningService | 10 |
+| DeduplicationService | 2 |
+| VolumeFilterService | 2 |
+| ClassificationService | 35 |
+| LoginForm | 3 |
+| GapAnalysisService | 6 |
+| GroupingService | 4 |
+| TemplateAdGenerator | 7 |
+| LlmAdGenerator | 7 |
+| ExportService | 6 |
+| AdTest | 10 |
+| **Итого** | **130 тестов, 286 assertions** |
+
+### Статический анализ
+- [x] PHPStan level 5 — **0 errors**
