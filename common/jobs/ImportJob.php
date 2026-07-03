@@ -224,7 +224,16 @@ class ImportJob extends BaseObject implements JobInterface
      */
     private function parseVolume(mixed $raw): ?int
     {
-        if ($raw === null || $raw === '' || $raw === '-' || strtoupper($raw) === 'N/A') {
+        // Handle non-string types first (e.g. int from JSON)
+        if (is_int($raw)) {
+            return $raw;
+        }
+        if (!is_string($raw)) {
+            return null;
+        }
+
+        $raw = trim($raw);
+        if ($raw === '' || $raw === '-' || strtoupper($raw) === 'N/A') {
             return null;
         }
 
