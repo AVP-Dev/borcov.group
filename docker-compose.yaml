@@ -20,11 +20,11 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:16-alpine
-    entrypoint: /docker/pg-entrypoint.sh
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/pg-entrypoint.sh:/docker/pg-entrypoint.sh
     environment:
       POSTGRES_DB: ${DB_NAME:-keyword_platform}
       POSTGRES_USER: ${DB_USER:-yii2}

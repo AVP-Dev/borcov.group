@@ -274,6 +274,8 @@ ImportJob (upsert, hash idempotency)
   - If all 4 connection attempts fail, prints a clear recovery message (`docker compose down -v && docker compose up -d`) and exits
 - **Fix 2:** `docker-compose.yaml` — PostgreSQL service must not use a named volume that was pre-initialized by Coolify's own PostgreSQL instance. If the volume is shared or pre-created, the solution is either: (a) remove the volume and let the compose file reinitialize, or (b) let the entrypoint create the missing role/database (Fix 1 covers this).
 - **Деплой:** push → Coolify auto-deploy → health check passes → login page loads without 502.
+- **Проблема:** bind mount `./docker/pg-entrypoint.sh` не работает в Coolify — `exec: /docker/pg-entrypoint.sh: is a directory`
+- **Фикс:** создан `Dockerfile.postgres`, который копирует скрипт внутрь образа (COPY + chmod). `docker-compose.yaml` использует `build:` вместо `image:`.
 
 ---
 
