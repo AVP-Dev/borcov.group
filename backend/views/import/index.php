@@ -16,7 +16,7 @@ $this->title = Yii::t('app', 'import.title');
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]) ?>
+            <?php $form = ActiveForm::begin(['action' => ['/import/upload'], 'options' => ['enctype' => 'multipart/form-data']]) ?>
 
             <div class="mb-3">
                 <label class="form-label"><?= Yii::t('app', 'import.source_type') ?></label>
