@@ -60,7 +60,7 @@ class ExportService
     private function doExport(array $ads): array
     {
 
-        $exportDir = Yii::getAlias('@common/runtime/exports');
+        $exportDir = Yii::getAlias('@backend/runtime/exports');
         if (!is_dir($exportDir)) {
             mkdir($exportDir, 0775, true);
         }
