@@ -35,8 +35,6 @@
 
 ---
 
----
-
 ## Фаза 1: Import — SourceAdapter, ImportService, Queue Job
 
 ### Создано
@@ -56,14 +54,6 @@
 - [x] `common/tests/Unit/pipeline/CsvAdapterTest.php` — 7 тестов (разные источники, quoted fields, missing volume, missing file)
 - [x] `common/tests/Unit/pipeline/JsonAdapterTest.php` — 6 тестов (Search Console JSON, custom fieldMap, invalid JSON, non-existent file)
 - [x] `common/tests/Unit/pipeline/ImportServiceTest.php` — 6 тестов (создание батча, idempotency, разные источники, JSON source, ошибки)
-- [x] Итого: **22 теста, 50 ассершнов** — все проходят
-
-### Статический анализ
-- [x] PHPStan level 5 — 0 ошибок в новом коде (2 pre-existing в backend/controllers и views)
-- [x] Добавлены `common/components/pipeline/` и `common/jobs/` в phpstan.neon
-
-### i18n
-- [x] Добавлены 20 новых ключей (en/ru): заголовки, ошибки, статусы, названия источников
 
 ### Деплой
 - [x] **Деплой подтверждён:** health OK, login page, CSRF, Bootstrap CSS
@@ -88,13 +78,6 @@
 - [x] `common/tests/Unit/pipeline/CleaningServiceTest.php` — 8 тестов (valid, too short, digits, stop word, competitor brand, own brand, forbidden exact, forbidden contains, artifact)
 - [x] `common/tests/Unit/pipeline/DeduplicationServiceTest.php` — 2 теста (finds similar, no match for dissimilar)
 - [x] `common/tests/Unit/pipeline/VolumeFilterServiceTest.php` — 2 теста (rejects low volume, keeps low volume in 3+ sources)
-- [x] Итого 42 теста, 97 ассершнов — все проходят
-
-### Статический анализ
-- [x] PHPStan level 5 — 0 ошибок в новом коде
-
-### i18n
-- [x] 15 новых ключей (en/ru): clean.* — причины отбраковки, статусы
 
 ### Известные проблемы (решённые)
 - NormalizationServiceTest: `\u{2019}` не интерпретировался в одинарных кавычках PHP — пофикшено двойными кавычками
@@ -111,7 +94,7 @@
 ### Создано
 - [x] `common/config/classification.php` — конфигурируемые правила: 7 категорий + 3 интента + B2B-сегмент, en/ru паттерны
 - [x] `common/components/pipeline/ClassificationService.php` — rule-based классификатор: category (6 продуктовых + general_brand + unclassified), audience_segment (b2c/b2b), intent (commercial/informational/navigational/unknown)
-- [x] `common/jobs/ClassificationJob.php` — queue job: классифицирует все keywords batch со статусом cleaned → проставляет category/intent/audience_segment, переводит в ready
+- [x] `common/jobs/ClassificationJob.php` — queue job: классифицирует все keywords batch, проставляет category/intent/audience_segment
 - [x] CleanJob доработан: после VolumeFilter пушит ClassificationJob в очередь
 
 ### Тесты
@@ -121,13 +104,9 @@
    - Все 4 интента (en + ru): commercial, informational, navigational, unknown
    - B2B/B2C аудитория (en + ru)
    - Edge cases: пустой текст, null язык, whitespace, смешанный en/ru, site.pro без точки
-- [x] Итого: 72 теста, 133 assertion — все проходят
 
 ### Статический анализ
-- [x] PHPStan level 5 — 0 ошибок в новом коде
-
-### i18n
-- [x] 17 новых ключей (en/ru): class.* — категории, интенты, аудитория
+- [x] PHPStan level 5 — 0 ошибок
 
 ### Деплой на реальный URL
 - [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login работает, дашборд открывается, нет 500
@@ -152,4 +131,109 @@
 - [x] PHPStan level 5 — 0 ошибок
 
 ### Деплой на реальный URL
-- [ ] **Ожидает деплоя**
+- [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login, dashboard, import/upload, batches page, keywords table
+
+---
+
+## Фаза 5: Post-Phase-4 Bugfixes & Improvements
+
+Все изменения задеплоены до перехода к Фазе 5–8 из брифа.
+
+### Search Console CSV адаптация
+- [x] `createAdapter()` выбирает адаптер по расширению файла (`.csv` → CsvAdapter, `.json` → JsonAdapter), не по типу источника
+- [x] CsvAdapter: columnMap поддерживает массивы fallback-имён колонок (первое совпадение wins), поиск case-insensitive
+- [x] Search Console CSV: маппинг `Search query`/`Поисковый запрос` → keyword
+- [x] `common/components/pipeline/CsvAdapter.php` — доработан
+- [x] `common/components/pipeline/ImportService.php` — доработан createAdapter()
+- [x] Тесты: `CsvAdapterTest` — 2 новых теста (Search Console CSV, case-insensitive)
+- [x] Тестовые данные: `common/tests/Support/data/search_console.csv`, `common/tests/Support/data/search_console.json`
+- [x] **Деплой подтверждён**
+
+### Error resilience в queue jobs
+- [x] ImportJob: try/catch с `Yii::error()`, помечает batch как failed при исключении
+- [x] CleanJob: try/catch с `Yii::error()`, пробрасывает исключение для retry в очереди
+- [x] ClassificationJob: try/catch с `Yii::error()`, пробрасывает исключение для retry
+- [x] Queue config: `queue.ttr = 300`, `queue.attempts = 3`
+- [x] Upload validation: только .csv/.json, max 20MB, temp file cleanup после ImportJob
+- [x] Batches page UX: auto-refresh каждые 3s во время processing, spinner, JS timezone conversion для imported_at
+- [x] **Деплой подтверждён**
+
+### Language detection
+- [x] `NormalizationService::detectLanguage(string $text): string` — `preg_match('/\p{Cyrillic}/u', $text) ? 'ru' : 'en'`
+- [x] `CleanJob.php` — вызывает `detectLanguage()` после `normalize()`, сохраняет в `keyword->language`
+- [x] Root cause: `language` никогда не заполнялся → `classify()` видел `'en'` → не применял русские паттерны → все ru-ключи были unclassified
+- [x] Тесты: `NormalizationServiceTest` — 3 новых теста (detect ru, detect en, detect mixed)
+- [x] **Деплой подтверждён**
+
+### Расширенные ru-паттерны классификации
+- [x] website_builder: добавлены `'конструктор'`, `'бесплатный конструктор'`, `'как сделать сайт'`, `'как создать сайт'`, `'как сделать интернет магазин'`
+- [x] informational intent ru: добавлены `'бесплатный'`, `'бесплатная'`, `'бесплатные'` (было только `'бесплатно'` — наречие, не совпадало с прилагательными)
+- [x] `common/config/classification.php` — обновлён
+- [x] **Деплой подтверждён**
+
+### rejection_reason display fix
+- [x] `backend/views/keyword/index.php` — колонка `rejection_reason` обёрнута в `Yii::t('app', $model->rejection_reason)` c fallback (если в БД уже переведённая строка — `Yii::t()` возвращает как есть)
+- [x] **Деплой подтверждён**
+
+### Regression tests (5 ru-фраз)
+- [x] `'как сделать сайт'` → website_builder + informational
+- [x] `'создать сайт бесплатно'` → website_builder + informational
+- [x] `'бесплатный конструктор'` → website_builder + informational
+- [x] `'конструктор интернет магазина'` → website_builder
+- [x] `'почта для домена'` → email
+- [x] **Деплой подтверждён**
+
+### pg_trgm fuzzy brand detection
+- [x] `CleaningService::$brandFuzzyThreshold = 0.6`
+- [x] `CleaningService::checkBrandFuzzy()` — word-level pg_trgm similarity через `regexp_split_to_table()` (сравнение по словам, а не по всей фразе — предотвращает разбавление триграммами соседних слов)
+- [x] Own brands приоритетны: `ORDER BY is_own_brand DESC`
+- [x] Fallback: вызывается после exact match (`str_contains`) если текст >= 3 символов
+- [x] Тест: `'quarespace website builder'` → brand match на `'squarespace'` (similarity=0.6)
+- [x] **Деплой подтверждён**
+
+### ClassificationJob для всех ключей (включая rejected)
+- [x] `ClassificationJob` теперь запрашивает `Keyword::find()->where(['batch_id' => $this->batchId])` без фильтра по статусу
+- [x] `STATUS_READY` выставляется только для `STATUS_CLEANED`; rejected-ключи сохраняют `STATUS_REJECTED`
+- [x] Gap Analysis теперь видит корректные категории для всех ключей, а не сплошной `unclassified`
+- [x] **Деплой подтверждён**
+
+---
+
+## Сводка тестового покрытия
+
+| Компонент | Файл | Тестов |
+|-----------|------|--------|
+| CsvAdapter | `CsvAdapterTest.php` | 9 |
+| JsonAdapter | `JsonAdapterTest.php` | 8 |
+| ImportService | `ImportServiceTest.php` | 6 |
+| NormalizationService | `NormalizationServiceTest.php` | 10 |
+| CleaningService | `CleaningServiceTest.php` | 10 |
+| DeduplicationService | `DeduplicationServiceTest.php` | 2 |
+| VolumeFilterService | `VolumeFilterServiceTest.php` | 2 |
+| ClassificationService | `ClassificationServiceTest.php` | 35 |
+| LoginForm | `LoginFormTest.php` | 3 |
+| **Итого** | | **85 тестов, 165 assertions** |
+
+### Статический анализ
+- [x] PHPStan level 5 — **0 errors**
+
+---
+
+## Pipeline flow (production)
+
+```
+ImportJob (upsert, hash idempotency)
+  → CleanJob (normalize + detect language + clean + dedup + volume filter)
+    → ClassificationJob (classify ALL keywords, set READY only for cleaned)
+      → Keywords ready for Gap Analysis / Grouping / Export
+```
+
+---
+
+## Что не реализовано (из BRIEF.md §§3–4)
+
+- **Фаза 5:** GapAnalysisService (п.7) + Gap Analysis UI (п.4, §4)
+- **Фаза 6:** GroupingService (п.8) + AdGenerationService (п.9) + Ad Groups preview UI
+- **Фаза 7:** ExportService (п.10) + export history UI
+- **§4**: Settings page (volume threshold, forbidden/brand terms editors)
+- **README**: билингвальная документация (EN + RU) — требуется по BRIEF.md §6
