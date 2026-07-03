@@ -8,9 +8,6 @@ use yii\db\ActiveRecord;
 
 class ImportBatch extends ActiveRecord
 {
-    /** @var string|null In-memory error message (may not have DB column yet) */
-    public ?string $error_message = null;
-
     public const STATUS_PROCESSING = 'processing';
     public const STATUS_DONE = 'done';
     public const STATUS_FAILED = 'failed';
@@ -41,5 +38,25 @@ class ImportBatch extends ActiveRecord
     public function getKeywords()
     {
         return $this->hasMany(Keyword::class, ['batch_id' => 'id']);
+    }
+
+    /**
+     * Get error message, or null if column doesn't exist.
+     */
+    public function getErrorText(): ?string
+    {
+        try {
+            return $this->error_message;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function __get($name)
+    {
+        if ($name === 'error_message') {
+            return $this->getErrorText();
+        }
+        return parent::__get($name);
     }
 }

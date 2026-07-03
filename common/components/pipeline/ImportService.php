@@ -33,7 +33,9 @@ class ImportService extends Component
             if ($existing->status === ImportBatch::STATUS_FAILED) {
                 // Re-process failed batch: reset and push new job
                 $existing->status = ImportBatch::STATUS_PROCESSING;
-                $existing->error_message = null;
+                if ($existing->hasAttribute('error_message')) {
+                    $existing->setAttribute('error_message', null);
+                }
                 $existing->rows_total = 0;
                 $existing->rows_accepted = 0;
                 $existing->rows_rejected = 0;

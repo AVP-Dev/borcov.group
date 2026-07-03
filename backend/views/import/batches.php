@@ -88,7 +88,7 @@ $this->registerJs('
                         return '<span class="spinner-border spinner-border-sm me-1" role="status"></span> ' . Html::encode(Yii::t('app', 'import.status.' . $model->status));
                     }
                     if ($model->status === ImportBatch::STATUS_FAILED) {
-                        $errMsg = $model->error_message ?? 'Check app logs for details';
+                        $errMsg = $model->getErrorText() ?? 'Check app logs for details';
                         return '<span class="text-danger">' . Html::encode(Yii::t('app', 'import.status.failed')) . '</span>'
                             . '<br><small class="text-muted">'
                             . Html::encode(mb_substr($errMsg, 0, 120)) . (mb_strlen($errMsg) > 120 ? '…' : '')
