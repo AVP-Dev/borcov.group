@@ -59,6 +59,25 @@ class LlmAdGenerator implements AdGeneratorInterface
             return $this->markFallback($this->fallback->generate($group, $keyword));
         }
 
+        // Pad with template ads if LLM returned fewer than 3
+        if (count($ads) < 3) {
+            $fallback = $this->fallback->generate($group, $keyword);
+            foreach ($fallback as $ad) {
+                if (count($ads) >= 3) break;
+                $ads[] = new AdData(
+                    headline1: $ad->headline1,
+                    headline2: $ad->headline2,
+                    headline3: $ad->headline3,
+                    description1: $ad->description1,
+                    description2: $ad->description2,
+                    finalUrl: $ad->finalUrl,
+                    path1: $ad->path1,
+                    path2: $ad->path2,
+                    source: AdData::SOURCE_LLM_FALLBACK,
+                );
+            }
+        }
+
         return $ads;
     }
 
@@ -109,7 +128,7 @@ class LlmAdGenerator implements AdGeneratorInterface
     private function buildPrompt(Keyword $keyword, AdGroup $group, string $lang): string
     {
         $url = $this->fallback->categoryUrlMap[$group->category] ?? '/';
-        return "Generate 2 Google Responsive Search Ads for keyword \"{$keyword->raw_text}\" "
+        return "Generate 3 Google Responsive Search Ads for keyword \"{$keyword->raw_text}\" "
             . "(normalized: \"{$keyword->normalized_text}\") in {$lang} language. "
             . "Category: {$group->category}. "
             . "Return JSON array: [{\"headline1\":\"...\",\"headline2\":\"...\",\"headline3\":\"...\","
@@ -140,7 +159,7 @@ class LlmAdGenerator implements AdGeneratorInterface
         $targetUrl = $baseUrl . ($this->fallback->categoryUrlMap[$group->category] ?? '/');
 
         $results = [];
-        foreach ($adsJson as $item) {
+        foreach (array_slice($adsJson, 0, 3) as $item) {
             if (!is_array($item) || empty($item['headline1']) || empty($item['description1'])) {
                 continue;
             }

@@ -129,8 +129,10 @@ final class LlmAdGeneratorTest extends Unit
         $generator = new LlmAdGenerator(null, $httpMock);
         $ads = $generator->generate($this->group, $this->keyword);
 
-        verify(count($ads) === 1);
+        verify(count($ads) === 3);
         verify($ads[0]->source)->equals(AdData::SOURCE_LLM);
+        verify($ads[1]->source)->equals(AdData::SOURCE_LLM_FALLBACK);
+        verify($ads[2]->source)->equals(AdData::SOURCE_LLM_FALLBACK);
         verify($ads[0]->headline1)->stringContainsString('Website');
         verify(mb_strlen($ads[0]->headline1) <= AdGeneratorInterface::MAX_HEADLINE_LENGTH);
         verify(mb_strlen($ads[0]->description1) <= AdGeneratorInterface::MAX_DESCRIPTION_LENGTH);
