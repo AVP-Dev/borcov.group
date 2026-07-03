@@ -7,6 +7,7 @@ namespace common\components\pipeline;
 use common\models\AdGroup;
 use common\models\AdGroupKeyword;
 use common\models\Keyword;
+use Yii;
 
 class GroupingService
 {
@@ -22,11 +23,16 @@ class GroupingService
         Keyword::CATEGORY_UNCLASSIFIED => '/',
     ];
 
+    private const int ADS_PER_GROUP = 3;
+
     public function __construct(
         private readonly ?AdGeneratorInterface $generator = null,
     ) {}
 
-    public function groupAll(): int
+    /**
+     * @return array{int, int} [groupsCreated, adsGenerated]
+     */
+    public function groupAll(): array
     {
         $keywords = Keyword::find()
             ->where(['status' => Keyword::STATUS_READY])
@@ -36,11 +42,12 @@ class GroupingService
             ->all();
 
         if ($keywords === []) {
-            return 0;
+            return [0, 0];
         }
 
         $groups = $this->buildGroups($keywords);
-        $created = 0;
+        $groupsCreated = 0;
+        $adsGenerated = 0;
 
         foreach ($groups as $key => $keywordIds) {
             [$category, $segment, $language] = explode('|', $key, 3);
@@ -57,8 +64,11 @@ class GroupingService
                 $group->audience_segment = $segment;
                 $group->language = $language;
                 $group->theme_label = $this->buildThemeLabel($category, $segment, $language);
-                $group->save();
-                $created++;
+                if (!$group->save()) {
+                    Yii::error('Failed to create AdGroup: ' . json_encode($group->errors), 'grouping');
+                    continue;
+                }
+                $groupsCreated++;
             }
 
             $group->target_url = $this->resolveTargetUrl($category);
@@ -75,26 +85,17 @@ class GroupingService
             }
 
             if ($this->generator !== null) {
-                $firstKw = Keyword::findOne($keywordIds[0]);
-                if ($firstKw !== null && $group->getAds()->count() === 0) {
-                    $ads = $this->generator->generate($group, $firstKw);
-                    foreach ($ads as $adData) {
-                        $ad = new \common\models\Ad();
-                        $ad->ad_group_id = $group->id;
-                        $ad->headline_1 = $adData->headline1;
-                        $ad->headline_2 = $adData->headline2;
-                        $ad->description_1 = $adData->description1;
-                        $ad->final_url = $adData->finalUrl;
-                        $ad->path_1 = $adData->path1;
-                        $ad->path_2 = $adData->path2;
-                        $ad->generator = $adData->source;
-                        $ad->save();
+                $currentAdCount = $group->getAds()->count();
+                if ($currentAdCount < self::ADS_PER_GROUP) {
+                    $firstKw = Keyword::findOne($keywordIds[0]);
+                    if ($firstKw !== null) {
+                        $adsGenerated += $this->generateAds($group, $firstKw);
                     }
                 }
             }
         }
 
-        return $created;
+        return [$groupsCreated, $adsGenerated];
     }
 
     public function regenerateForGroup(int $adGroupId): int
@@ -111,8 +112,13 @@ class GroupingService
             return 0;
         }
 
-        $count = 0;
-        $ads = $this->generator->generate($group, $firstKw);
+        return $this->generateAds($group, $firstKw);
+    }
+
+    private function generateAds(AdGroup $group, Keyword $keyword): int
+    {
+        $ads = $this->generator->generate($group, $keyword);
+        $saved = 0;
         foreach ($ads as $adData) {
             $ad = new \common\models\Ad();
             $ad->ad_group_id = $group->id;
@@ -123,10 +129,16 @@ class GroupingService
             $ad->path_1 = $adData->path1;
             $ad->path_2 = $adData->path2;
             $ad->generator = $adData->source;
-            $ad->save();
-            $count++;
+            if ($ad->save()) {
+                $saved++;
+            } else {
+                Yii::error(
+                    'Failed to save Ad for group #' . $group->id . ': ' . json_encode($ad->errors),
+                    'grouping',
+                );
+            }
         }
-        return $count;
+        return $saved;
     }
 
     /** @param Keyword[] $keywords */
@@ -146,7 +158,7 @@ class GroupingService
 
     private function resolveTargetUrl(string $category): string
     {
-        $baseUrl = rtrim(\Yii::$app->params['siteUrl'] ?? 'https://site.pro', '/');
+        $baseUrl = rtrim(Yii::$app->params['siteUrl'] ?? 'https://site.pro', '/');
         return $baseUrl . (self::CATEGORY_URL_MAP[$category] ?? '/');
     }
 

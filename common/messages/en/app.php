@@ -190,7 +190,7 @@ return [
     'ad_groups.title' => 'Ad Groups',
     'ad_groups.view_title' => 'Ad Group: {label}',
     'ad_groups.generate_btn' => 'Generate Groups & Ads',
-    'ad_groups.generated' => 'Created {count} ad groups.',
+    'ad_groups.generated' => 'Created {groups} groups, generated {ads} ads.',
     'ad_groups.not_found' => 'Ad group not found.',
     'ad_groups.category' => 'Category',
     'ad_groups.audience' => 'Audience',

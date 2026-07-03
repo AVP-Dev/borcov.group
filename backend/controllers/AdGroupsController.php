@@ -45,9 +45,12 @@ class AdGroupsController extends Controller
     public function actionGenerate(): \yii\web\Response
     {
         $service = new GroupingService(new TemplateAdGenerator());
-        $created = $service->groupAll();
+        [$groupsCreated, $adsGenerated] = $service->groupAll();
 
-        Yii::$app->session->setFlash('success', Yii::t('app', 'ad_groups.generated', ['count' => $created]));
+        Yii::$app->session->setFlash(
+            'success',
+            Yii::t('app', 'ad_groups.generated', ['groups' => $groupsCreated, 'ads' => $adsGenerated]),
+        );
         return $this->redirect(['index']);
     }
 

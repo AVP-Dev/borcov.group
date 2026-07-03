@@ -99,9 +99,10 @@ final class GroupingServiceTest extends Unit
     public function testGroupsReadyKeywords(): void
     {
         $service = new GroupingService();
-        $created = $service->groupAll();
+        [$groupsCreated, $adsGenerated] = $service->groupAll();
 
-        verify($created)->equals(6);
+        verify($groupsCreated)->equals(6);
+        verify($adsGenerated)->equals(0);
 
         $websiteB2CEn = AdGroup::find()
             ->where(['category' => Keyword::CATEGORY_WEBSITE_BUILDER, 'audience_segment' => Keyword::AUDIENCE_B2C, 'language' => 'en'])
@@ -119,11 +120,13 @@ final class GroupingServiceTest extends Unit
     public function testIsIdempotent(): void
     {
         $service = new GroupingService();
-        $first = $service->groupAll();
-        $second = $service->groupAll();
+        [$firstGroups, $firstAds] = $service->groupAll();
+        [$secondGroups, $secondAds] = $service->groupAll();
 
-        verify($first)->equals(6);
-        verify($second)->equals(0);
+        verify($firstGroups)->equals(6);
+        verify($firstAds)->equals(0);
+        verify($secondGroups)->equals(0);
+        verify($secondAds)->equals(0);
 
         verify(AdGroup::find()->count())->equals(6);
     }
@@ -132,20 +135,37 @@ final class GroupingServiceTest extends Unit
     {
         Keyword::updateAll(['status' => Keyword::STATUS_CLEANED], ['status' => Keyword::STATUS_READY]);
         $service = new GroupingService();
-        verify($service->groupAll())->equals(0);
+        [$groupsCreated, $adsGenerated] = $service->groupAll();
+        verify($groupsCreated)->equals(0);
+        verify($adsGenerated)->equals(0);
     }
 
     public function testGroupingWithGenerator(): void
     {
         $generator = new TemplateAdGenerator();
         $service = new GroupingService($generator);
-        $service->groupAll();
+        [$groupsCreated, $adsGenerated] = $service->groupAll();
+
+        verify($groupsCreated)->equals(6);
+        verify($adsGenerated)->greaterThan(0);
 
         $webGroup = AdGroup::find()
             ->where(['category' => Keyword::CATEGORY_WEBSITE_BUILDER, 'language' => 'en'])
             ->one();
         verify($webGroup)->notNull();
-        verify((int)$webGroup->getAds()->count() > 0);
+        verify($webGroup->getAds()->count())->greaterThan(0);
+    }
+
+    public function testGeneratorCreatesExactlyThreeAdsPerGroup(): void
+    {
+        $generator = new TemplateAdGenerator();
+        $service = new GroupingService($generator);
+        $service->groupAll();
+
+        $groups = AdGroup::find()->all();
+        foreach ($groups as $group) {
+            verify($group->getAds()->count())->equals(3);
+        }
     }
 
     public function testTargetUrlSetOnAllGroups(): void

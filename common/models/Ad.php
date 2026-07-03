@@ -31,7 +31,7 @@ class Ad extends ActiveRecord
     public function rules(): array
     {
         return [
-            [['ad_group_id', 'headline_1', 'description_1', 'final_url'], 'required'],
+            [['ad_group_id', 'headline_1', 'headline_2', 'description_1', 'final_url'], 'required'],
             ['ad_group_id', 'integer'],
             [['headline_1', 'headline_2', 'headline_3', 'headline_4', 'headline_5',
               'headline_6', 'headline_7', 'headline_8', 'headline_9', 'headline_10',

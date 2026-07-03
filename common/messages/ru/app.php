@@ -190,7 +190,7 @@ return [
     'ad_groups.title' => 'Группы объявлений',
     'ad_groups.view_title' => 'Группа: {label}',
     'ad_groups.generate_btn' => 'Сгенерировать группы и объявления',
-    'ad_groups.generated' => 'Создано {count} групп.',
+    'ad_groups.generated' => 'Создано {groups} групп, сгенерировано {ads} объявлений.',
     'ad_groups.not_found' => 'Группа объявлений не найдена.',
     'ad_groups.category' => 'Категория',
     'ad_groups.audience' => 'Аудитория',
