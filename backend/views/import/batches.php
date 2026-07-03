@@ -96,7 +96,7 @@ $this->registerJs('
                 'label' => Yii::t('app', 'import.imported_at'),
                 'value' => fn($model) => $model->imported_at,
                 'format' => 'raw',
-                'contentOptions' => ['data-utc-time' => fn($model) => $model->imported_at],
+                'contentOptions' => fn($model) => ['data-utc-time' => $model->imported_at],
             ],
         ],
     ]) ?>
