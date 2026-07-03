@@ -43,6 +43,11 @@ class AdminController extends Controller
         $db = Yii::$app->db;
         echo "DB DSN: {$db->dsn}\n";
 
+        $envPass = getenv('ADMIN_PASSWORD');
+        echo "ADMIN_PASSWORD env: [" . ($envPass !== false ? $envPass : 'NOT SET') . "]\n";
+        echo "ADMIN_PASSWORD length: " . ($envPass !== false ? strlen($envPass) : 0) . "\n";
+        echo "ADMIN_PASSWORD hex: " . ($envPass !== false ? bin2hex($envPass) : 'N/A') . "\n";
+
         $user = User::findByUsername('admin');
 
         if ($user === null) {
