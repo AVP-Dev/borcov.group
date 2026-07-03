@@ -257,4 +257,7 @@ return [
     'export.history_title' => 'Export History',
     'export.no_groups' => 'No ad groups found. Go to Ad Groups → Generate Groups & Ads first.',
     'export.selected_count' => 'selected',
+    'export.toggle_ads' => 'Show/hide ads',
+    'export.status_draft' => 'Draft',
+    'export.status_exported' => 'Exported',
 ];

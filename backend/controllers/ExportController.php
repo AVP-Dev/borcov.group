@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace backend\controllers;
 
 use common\components\pipeline\ExportService;
+use common\models\Ad;
 use common\models\ExportBatch;
 use Yii;
 use yii\data\ActiveDataProvider;
@@ -36,14 +37,25 @@ class ExportController extends Controller
 
         $groupStats = ExportService::getGroupedStats();
 
+        // Load ads for each group (for expandable rows)
+        $groupAds = [];
+        foreach ($groupStats as $groupId => $stats) {
+            $groupAds[$groupId] = Ad::find()
+                ->where(['ad_group_id' => $groupId])
+                ->orderBy(['status' => SORT_ASC, 'id' => SORT_ASC])
+                ->all();
+        }
+
         return $this->render('index', [
             'historyProvider' => $historyProvider,
             'groupStats' => $groupStats,
+            'groupAds' => $groupAds,
         ]);
     }
 
     public function actionCreate(): Response
     {
+        $adIds = Yii::$app->request->post('ad_ids');
         $groupIds = Yii::$app->request->post('group_ids');
         $exportAll = Yii::$app->request->post('export_all') === '1';
 
@@ -51,6 +63,9 @@ class ExportController extends Controller
 
         if ($exportAll) {
             [$filePath, $adsCount, $keywordsCount] = $service->export();
+        } elseif (is_array($adIds) && $adIds !== []) {
+            $adIds = array_map('intval', $adIds);
+            [$filePath, $adsCount, $keywordsCount] = $service->exportSelected($adIds);
         } elseif (is_array($groupIds) && $groupIds !== []) {
             $groupIds = array_map('intval', $groupIds);
             [$filePath, $adsCount, $keywordsCount] = $service->exportGroups($groupIds);

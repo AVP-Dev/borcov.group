@@ -257,4 +257,7 @@ return [
     'export.history_title' => 'История экспортов',
     'export.no_groups' => 'Группы объявлений не найдены. Перейдите в Группы объявлений → Сгенерировать группы и объявления.',
     'export.selected_count' => 'выбрано',
+    'export.toggle_ads' => 'Показать/скрыть объявления',
+    'export.status_draft' => 'Черновик',
+    'export.status_exported' => 'Экспортировано',
 ];

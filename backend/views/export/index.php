@@ -6,9 +6,10 @@ declare(strict_types=1);
  * @var \yii\web\View $this
  * @var \yii\data\ActiveDataProvider $historyProvider
  * @var array<int, array{group: \common\models\AdGroup, total: int, draft: int, exported: int}> $groupStats
+ * @var array<int, \common\models\Ad[]> $groupAds
  */
 
-use common\models\AdGroup;
+use common\models\Ad;
 use common\models\Keyword;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -44,10 +45,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
+                    <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
                                 <th style="width:40px"><input type="checkbox" id="check-all"></th>
+                                <th style="width:32px"></th>
                                 <th><?= Yii::t('app', 'export.group_name') ?></th>
                                 <th><?= Yii::t('app', 'export.category') ?></th>
                                 <th><?= Yii::t('app', 'export.language') ?></th>
@@ -77,9 +79,18 @@ $this->params['breadcrumbs'][] = $this->title;
                                 if ($group->theme_label) {
                                     $groupName = Html::encode($group->theme_label) . ' <small class="text-muted">(' . Html::encode($catLabel) . ' · ' . strtoupper($group->language) . ')</small>';
                                 }
+                                $adsInGroup = $groupAds[$groupId] ?? [];
                                 ?>
-                                <tr class="group-row" data-group-id="<?= $groupId ?>">
+                                <tr class="group-row" data-group-id="<?= $groupId ?>" data-ad-ids="<?= Html::encode(implode(',', array_map(fn(Ad $a) => $a->id, $adsInGroup))) ?>">
                                     <td><input type="checkbox" name="group_ids[]" value="<?= $groupId ?>" class="group-check"></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-link p-0 toggle-ads"
+                                            data-target="#group-ads-<?= $groupId ?>"
+                                            aria-expanded="false"
+                                            title="<?= Yii::t('app', 'export.toggle_ads') ?>">
+                                            ▶
+                                        </button>
+                                    </td>
                                     <td>
                                         <?= Html::a($groupName, ['/ad-groups/view', 'id' => $groupId], ['class' => 'text-decoration-none']) ?>
                                     </td>
@@ -101,6 +112,50 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?php endif; ?>
                                     </td>
                                 </tr>
+                                <?php if ($adsInGroup !== []): ?>
+                                    <tr class="group-ads-row" id="group-ads-<?= $groupId ?>" style="display:none">
+                                        <td colspan="8" class="p-0">
+                                            <table class="table table-sm table-borderless mb-0 bg-light">
+                                                <tbody>
+                                                    <?php foreach ($adsInGroup as $ad): ?>
+                                                        <tr>
+                                                            <td style="width:40px; padding-left:32px">
+                                                                <input type="checkbox"
+                                                                    name="ad_ids[]"
+                                                                    value="<?= $ad->id ?>"
+                                                                    class="ad-check"
+                                                                    data-group-id="<?= $groupId ?>">
+                                                            </td>
+                                                            <td colspan="2" style="padding-left:8px">
+                                                                <small>
+                                                                    <?= Html::encode(mb_substr($ad->headline_1, 0, 30)) ?>
+                                                                    <span class="text-muted">|</span>
+                                                                    <?= Html::encode(mb_substr($ad->headline_2, 0, 30)) ?>
+                                                                </small>
+                                                            </td>
+                                                            <td>
+                                                                <small class="text-muted"><?= Html::encode(mb_substr($ad->description_1, 0, 50)) ?></small>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-<?= $ad->generator === 'template' ? 'secondary' : 'info' ?>"><?= Html::encode($ad->generator) ?></span>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <?php if ($ad->status === Ad::STATUS_DRAFT): ?>
+                                                                    <span class="badge bg-success"><?= Yii::t('app', 'export.status_draft') ?></span>
+                                                                <?php else: ?>
+                                                                    <span class="badge bg-secondary"><?= Yii::t('app', 'export.status_exported') ?></span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <?= Html::a('✏️', ['/ad-groups/view', 'id' => $groupId], ['class' => 'text-decoration-none small']) ?>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -167,51 +222,89 @@ $this->params['breadcrumbs'][] = $this->title;
 $this->registerJs(<<<'JS'
 var checkAll = document.getElementById('check-all');
 var groupChecks = document.querySelectorAll('.group-check');
+var adChecks = document.querySelectorAll('.ad-check');
 var selectAllBtn = document.getElementById('select-all');
 var deselectAllBtn = document.getElementById('deselect-all');
 var selectedCount = document.getElementById('selected-count');
 var exportBtn = document.getElementById('export-btn');
 var resetBtn = document.getElementById('reset-btn');
-var selectedText = '';
 
 function updateCount() {
-    var checked = document.querySelectorAll('.group-check:checked');
-    var count = checked.length;
-    var draftTotal = 0;
-    var exportedTotal = 0;
+    var checkedAds = document.querySelectorAll('.ad-check:checked');
+    var checkedGroups = document.querySelectorAll('.group-check:checked');
+    var totalCount = checkedAds.length;
+    var draftCount = 0;
+    var exportedCount = 0;
 
-    checked.forEach(function(cb) {
-        var row = cb.closest('.group-row');
+    checkedAds.forEach(function(cb) {
+        var row = cb.closest('tr');
         if (row) {
-            var draftCell = row.querySelector('td:nth-child(6) .badge');
-            var exportedCell = row.querySelector('td:nth-child(7) .badge');
-            if (draftCell) draftTotal += parseInt(draftCell.textContent);
-            if (exportedCell) exportedTotal += parseInt(exportedCell.textContent);
+            var statusBadge = row.querySelector('.badge.bg-success') || row.querySelector('.badge.bg-secondary');
+            if (statusBadge && statusBadge.classList.contains('bg-success')) draftCount++;
+            else if (statusBadge) exportedCount++;
         }
     });
 
     if (selectedCount) {
-        selectedCount.textContent = count + ' ' + selectedText;
+        selectedCount.textContent = totalCount + ' selected (' + draftCount + ' draft, ' + exportedCount + ' exported)';
     }
 
-    if (exportBtn) exportBtn.disabled = count === 0;
-    if (resetBtn) resetBtn.disabled = count === 0 || exportedTotal === 0;
+    if (exportBtn) exportBtn.disabled = totalCount === 0;
+    if (resetBtn) resetBtn.disabled = exportedCount === 0;
 }
 
+// Group checkbox → check/uncheck all ads in group
+groupChecks.forEach(function(gcb) {
+    gcb.addEventListener('change', function() {
+        var groupId = this.value;
+        var groupAds = document.querySelectorAll('.ad-check[data-group-id="' + groupId + '"]');
+        groupAds.forEach(function(acb) { acb.checked = gcb.checked; });
+        updateCount();
+    });
+});
+
+// Individual ad checkbox → update group checkbox state
+adChecks.forEach(function(acb) {
+    acb.addEventListener('change', function() {
+        var groupId = this.getAttribute('data-group-id');
+        var groupCheck = document.querySelector('.group-check[value="' + groupId + '"]');
+        var groupAds = document.querySelectorAll('.ad-check[data-group-id="' + groupId + '"]');
+        if (groupCheck) {
+            var allChecked = true;
+            groupAds.forEach(function(a) { if (!a.checked) allChecked = false; });
+            groupCheck.checked = allChecked;
+        }
+        updateCount();
+    });
+});
+
+// Check All
 if (checkAll) {
     checkAll.addEventListener('change', function() {
         groupChecks.forEach(function(cb) { cb.checked = checkAll.checked; });
+        adChecks.forEach(function(cb) { cb.checked = checkAll.checked; });
         updateCount();
     });
 }
 
-groupChecks.forEach(function(cb) {
-    cb.addEventListener('change', updateCount);
+// Toggle group rows
+document.querySelectorAll('.toggle-ads').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var target = document.querySelector(this.getAttribute('data-target'));
+        if (target) {
+            var isHidden = target.style.display === 'none' || target.style.display === '';
+            target.style.display = isHidden ? 'table-row' : 'none';
+            this.textContent = isHidden ? '▼' : '▶';
+            this.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+        }
+    });
 });
 
+// Select All / Deselect All buttons
 if (selectAllBtn) {
     selectAllBtn.addEventListener('click', function() {
         groupChecks.forEach(function(cb) { cb.checked = true; });
+        adChecks.forEach(function(cb) { cb.checked = true; });
         if (checkAll) checkAll.checked = true;
         updateCount();
     });
@@ -220,20 +313,29 @@ if (selectAllBtn) {
 if (deselectAllBtn) {
     deselectAllBtn.addEventListener('click', function() {
         groupChecks.forEach(function(cb) { cb.checked = false; });
+        adChecks.forEach(function(cb) { cb.checked = false; });
         if (checkAll) checkAll.checked = false;
         updateCount();
     });
 }
 
+// Export button loading state
 if (exportBtn) {
     exportBtn.addEventListener('click', function() {
+        // Ensure the form submits with ad_ids, not group_ids
         this.classList.add('disabled');
         this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Exporting...';
     });
 }
 
+// Reset button
 if (resetBtn) {
     resetBtn.addEventListener('click', function(e) {
+        var checkedGroups = document.querySelectorAll('.group-check:checked');
+        if (checkedGroups.length === 0) {
+            e.preventDefault();
+            return;
+        }
         if (!confirm('Reset exported ads in selected groups back to draft?')) {
             e.preventDefault();
             return;
