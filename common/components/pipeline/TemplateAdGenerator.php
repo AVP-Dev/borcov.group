@@ -52,14 +52,14 @@ class TemplateAdGenerator implements AdGeneratorInterface
     public array $headlinePatterns = [
         'en' => [
             '{keyword}',
-            '{keyword} — Try It Free',
+            '{keyword} — Free',
             'Best {keyword}',
             '{keyword} Online',
             '{keyword} Today',
         ],
         'ru' => [
             '{keyword}',
-            '{keyword} — попробуйте бесплатно',
+            '{keyword} — бесплатно',
             'Лучший {keyword}',
             '{keyword} онлайн',
             '{keyword} сегодня',
@@ -69,14 +69,14 @@ class TemplateAdGenerator implements AdGeneratorInterface
     /** @var array<string, string[]> language → description patterns */
     public array $descriptionPatterns = [
         'en' => [
-            '{usp} Build your online presence with site.pro. Start free today.',
-            'Looking for {keyword}? {usp} Get started in minutes.',
-            '{keyword} — {usp} Join 1M+ businesses worldwide.',
+            '{usp} Start your free trial.',
+            'Try {keyword}. {usp}',
+            '{keyword}: {usp}',
         ],
         'ru' => [
-            '{usp} Создайте свой онлайн-бизнес с site.pro. Начните бесплатно.',
-            'Ищете {keyword}? {usp} Начните за минуты.',
-            '{keyword} — {usp} Присоединяйтесь к 1M+ компаний по всему миру.',
+            '{usp} Начните бесплатно.',
+            '{keyword}: {usp}',
+            '{usp} Узнайте больше.',
         ],
     ];
 
@@ -103,19 +103,33 @@ class TemplateAdGenerator implements AdGeneratorInterface
             $d1 = $this->fill($descriptions[$i], $keywordText, $usp);
 
             $ads[] = new AdData(
-                headline1: mb_substr($h1, 0, self::MAX_HEADLINE_LENGTH),
-                headline2: mb_substr($h2, 0, self::MAX_HEADLINE_LENGTH),
+                headline1: $this->truncateWordSafe($h1, self::MAX_HEADLINE_LENGTH),
+                headline2: $this->truncateWordSafe($h2, self::MAX_HEADLINE_LENGTH),
                 headline3: null,
-                description1: mb_substr($d1, 0, self::MAX_DESCRIPTION_LENGTH),
+                description1: $this->truncateWordSafe($d1, self::MAX_DESCRIPTION_LENGTH),
                 description2: null,
                 finalUrl: $targetUrl,
-                path1: mb_substr($path1, 0, self::MAX_PATH_LENGTH),
+                path1: $this->truncateWordSafe($path1, self::MAX_PATH_LENGTH),
                 path2: null,
                 source: AdData::SOURCE_TEMPLATE,
             );
         }
 
         return $ads;
+    }
+
+    private function truncateWordSafe(string $text, int $maxLength): string
+    {
+        $text = trim($text);
+        if (mb_strlen($text) <= $maxLength) {
+            return $text;
+        }
+        $truncated = mb_substr($text, 0, $maxLength);
+        $lastSpace = mb_strrpos($truncated, ' ');
+        if ($lastSpace !== false) {
+            $truncated = mb_substr($truncated, 0, $lastSpace);
+        }
+        return $truncated;
     }
 
     private function resolveLanguage(AdGroup $group, Keyword $keyword): string

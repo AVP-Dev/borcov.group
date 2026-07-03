@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = $group->theme_label;
     <div class="card mb-4">
         <div class="card-body d-flex align-items-center gap-3">
             <span class="fw-semibold"><?= Yii::t('app', 'ad_groups.generator_label') ?>:</span>
-            <?php $form = ActiveForm::begin(['action' => ['regenerate', 'id' => $group->id], 'method' => 'post']) ?>
+            <?php $form = ActiveForm::begin(['id' => 'regenerate-form', 'action' => ['regenerate', 'id' => $group->id], 'method' => 'post']) ?>
             <div class="btn-group" role="group">
                 <input type="radio" class="btn-check" name="generator" id="gen-template" value="template" checked>
                 <label class="btn btn-outline-secondary" for="gen-template"><?= Yii::t('app', 'ad_groups.generator_template') ?></label>
@@ -46,7 +46,10 @@ $this->params['breadcrumbs'][] = $group->theme_label;
                     <?php endif; ?>
                 </label>
             </div>
-            <?= Html::submitButton(Yii::t('app', 'ad_groups.regenerate_btn'), ['class' => 'btn btn-primary ms-2']) ?>
+            <?= Html::submitButton(
+    Yii::t('app', 'ad_groups.regenerate_btn'),
+    ['class' => 'btn btn-primary ms-2', 'id' => 'regenerate-btn'],
+) ?>
             <?php ActiveForm::end() ?>
         </div>
     </div>
@@ -165,5 +168,14 @@ document.querySelectorAll('.ad-edit-btn').forEach(btn => {
         new bootstrap.Modal(document.getElementById('adEditModal')).show();
     });
 });
+
+const regenerateForm = document.querySelector('#regenerate-form');
+const regenerateBtn = document.getElementById('regenerate-btn');
+if (regenerateForm && regenerateBtn) {
+    regenerateForm.addEventListener('submit', function() {
+        regenerateBtn.disabled = true;
+        regenerateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Generating...';
+    });
+}
 JS);
 ?>

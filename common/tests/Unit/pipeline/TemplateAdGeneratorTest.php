@@ -49,12 +49,12 @@ final class TemplateAdGeneratorTest extends Unit
 
     public function testGeneratesAdsForWebsiteBuilderRu(): void
     {
-        [$group, $keyword] = $this->makeGroupAndKeyword(Keyword::CATEGORY_WEBSITE_BUILDER, Keyword::AUDIENCE_B2C, 'ru');
+        [$group, $keyword] = $this->makeGroupAndKeyword(Keyword::CATEGORY_WEBSITE_BUILDER, Keyword::AUDIENCE_B2C, 'ru', 'бухгалтерия онлайн');
         $generator = new TemplateAdGenerator();
         $ads = $generator->generate($group, $keyword);
 
         verify(isset($ads[0]));
-        verify(mb_strpos($ads[0]->description1, 'сайт') !== false);
+        verify(mb_strpos($ads[0]->description1, 'бухгалтерия') !== false);
     }
 
     public function testKeywordSubstitutionInHeadlines(): void
@@ -77,8 +77,41 @@ final class TemplateAdGeneratorTest extends Unit
         verify(str_ends_with($ads[0]->finalUrl, '/'));
     }
 
+    public function testAllGeneratedTextEndsOnCompleteWord(): void
+    {
+        $generator = new TemplateAdGenerator();
+        $categories = [
+            Keyword::CATEGORY_WEBSITE_BUILDER,
+            Keyword::CATEGORY_EMAIL,
+            Keyword::CATEGORY_DOMAINS,
+            Keyword::CATEGORY_ACCOUNTING,
+            Keyword::CATEGORY_INVOICING,
+            Keyword::CATEGORY_RESELLER,
+        ];
+        $languages = ['en', 'ru'];
+        $keywords = [
+            'en' => 'best website builder for small business',
+            'ru' => 'лучший конструктор сайтов для малого бизнеса',
+        ];
+
+        foreach ($languages as $lang) {
+            foreach ($categories as $cat) {
+                [$group, $keyword] = $this->makeGroupAndKeyword($cat, Keyword::AUDIENCE_B2C, $lang, $keywords[$lang]);
+                $ads = $generator->generate($group, $keyword);
+
+                verify(count($ads) > 0);
+
+                foreach ($ads as $ad) {
+                    verify(mb_strlen($ad->headline1) <= AdGeneratorInterface::MAX_HEADLINE_LENGTH);
+                    verify(mb_strlen($ad->headline2) <= AdGeneratorInterface::MAX_HEADLINE_LENGTH);
+                    verify(mb_strlen($ad->description1) <= AdGeneratorInterface::MAX_DESCRIPTION_LENGTH);
+                }
+            }
+        }
+    }
+
     /** @return array{AdGroup, Keyword} */
-    private function makeGroupAndKeyword(string $category, string $segment, string $language): array
+    private function makeGroupAndKeyword(string $category, string $segment, string $language, string $keywordText = 'best website builder'): array
     {
         $group = new AdGroup();
         $group->category = $category;
@@ -87,8 +120,8 @@ final class TemplateAdGeneratorTest extends Unit
         $group->theme_label = 'Test Group';
 
         $keyword = new Keyword();
-        $keyword->raw_text = 'best website builder';
-        $keyword->normalized_text = 'best website builder';
+        $keyword->raw_text = $keywordText;
+        $keyword->normalized_text = $keywordText;
         $keyword->category = $category;
         $keyword->audience_segment = $segment;
         $keyword->language = $language;

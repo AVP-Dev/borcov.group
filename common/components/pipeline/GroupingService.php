@@ -10,6 +10,18 @@ use common\models\Keyword;
 
 class GroupingService
 {
+    /** @var array<string, string> category → target URL path */
+    private const array CATEGORY_URL_MAP = [
+        Keyword::CATEGORY_WEBSITE_BUILDER => '/website-builder',
+        Keyword::CATEGORY_EMAIL => '/email',
+        Keyword::CATEGORY_DOMAINS => '/domains',
+        Keyword::CATEGORY_ACCOUNTING => '/accounting',
+        Keyword::CATEGORY_INVOICING => '/invoicing',
+        Keyword::CATEGORY_RESELLER => '/reseller',
+        Keyword::CATEGORY_GENERAL_BRAND => '/',
+        Keyword::CATEGORY_UNCLASSIFIED => '/',
+    ];
+
     public function __construct(
         private readonly ?AdGeneratorInterface $generator = null,
     ) {}
@@ -49,6 +61,9 @@ class GroupingService
                 $created++;
             }
 
+            $group->target_url = $this->resolveTargetUrl($category);
+            $group->save();
+
             foreach ($keywordIds as $kwId) {
                 $link = AdGroupKeyword::findOne(['ad_group_id' => $group->id, 'keyword_id' => $kwId]);
                 if ($link === null) {
@@ -60,16 +75,9 @@ class GroupingService
             }
 
             if ($this->generator !== null) {
-                foreach ($keywordIds as $kwId) {
-                    $kw = Keyword::findOne($kwId);
-                    if ($kw === null) {
-                        continue;
-                    }
-                    $existingAds = $group->getAds()->count();
-                    if ($existingAds > 0) {
-                        continue;
-                    }
-                    $ads = $this->generator->generate($group, $kw);
+                $firstKw = Keyword::findOne($keywordIds[0]);
+                if ($firstKw !== null && $group->getAds()->count() === 0) {
+                    $ads = $this->generator->generate($group, $firstKw);
                     foreach ($ads as $adData) {
                         $ad = new \common\models\Ad();
                         $ad->ad_group_id = $group->id;
@@ -131,6 +139,12 @@ class GroupingService
         }
         ksort($groups);
         return $groups;
+    }
+
+    private function resolveTargetUrl(string $category): string
+    {
+        $baseUrl = rtrim(\Yii::$app->params['siteUrl'] ?? 'https://site.pro', '/');
+        return $baseUrl . (self::CATEGORY_URL_MAP[$category] ?? '/');
     }
 
     private function buildThemeLabel(string $category, string $segment, string $language): string

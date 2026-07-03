@@ -13,6 +13,7 @@ use common\models\ImportBatch;
 use common\models\Keyword;
 use common\models\Source;
 use common\tests\Support\UnitTester;
+use Yii;
 
 final class GroupingServiceTest extends Unit
 {
@@ -22,9 +23,16 @@ final class GroupingServiceTest extends Unit
     protected function _setUp(): void
     {
         parent::_setUp();
+        Yii::$app->params['siteUrl'] = 'https://site.pro';
         $this->seedSources();
         $this->seedBatch();
         $this->seedKeywords();
+    }
+
+    protected function _tearDown(): void
+    {
+        unset(Yii::$app->params['siteUrl']);
+        parent::_tearDown();
     }
 
     private function seedSources(): void
@@ -138,5 +146,29 @@ final class GroupingServiceTest extends Unit
             ->one();
         verify($webGroup)->notNull();
         verify((int)$webGroup->getAds()->count() > 0);
+    }
+
+    public function testTargetUrlSetOnAllGroups(): void
+    {
+        $service = new GroupingService();
+        $service->groupAll();
+
+        $groups = AdGroup::find()->all();
+        verify(count($groups))->equals(6);
+
+        foreach ($groups as $group) {
+            verify($group->target_url)->notNull();
+            verify(str_starts_with($group->target_url, 'https://site.pro'));
+        }
+
+        $webGroup = AdGroup::find()
+            ->where(['category' => Keyword::CATEGORY_WEBSITE_BUILDER, 'language' => 'en'])
+            ->one();
+        verify(str_ends_with($webGroup->target_url, '/website-builder'));
+
+        $resellerGroup = AdGroup::find()
+            ->where(['category' => Keyword::CATEGORY_RESELLER, 'language' => 'en'])
+            ->one();
+        verify(str_ends_with($resellerGroup->target_url, '/reseller'));
     }
 }
