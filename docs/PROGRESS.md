@@ -230,9 +230,19 @@ ImportJob (upsert, hash idempotency)
 
 ---
 
+## Что реализовано в этой сессии (Phase 5)
+
+### Gap Analysis Service + UI
+
+- **GapAnalysisService** (`common/components/pipeline/GapAnalysisService.php`): `analysis()` with pg_trgm `similarity()` in `NOT EXISTS` subquery — Ahrefs Paid keywords minus (GAds OR Search Console), filtered by `volume >= minVolume`; fuzzy brand exclusion via `CleaningService::checkBrandFuzzy()`
+- **GapAnalysisController** (`backend/controllers/GapAnalysisController.php`): `actionIndex()` renders GridView with category/intent grouping
+- **View** (`backend/views/gap-analysis/index.php`): sortable GridView, pagination 50/page, category/intent grouping disambiguation, `language` badge, volume totals per group
+- **Navbar**: "Gap Analysis" link with `bi-graph-up-arrow` icon
+- **i18n**: keys `gap.title`, `gap.candidates`, `gap.no_candidates`, `gap.category`, `gap.intent`, `gap.volume`, `gap.language`, `gap.ahrefs_only`, `gap.keyword`, `nav.gap_analysis` in both en + ru
+- **Tests**: 5 tests — gap candidate found, existing keyword excluded, fuzzy match excluded, low-volume filtered, result structure
+
 ## Что не реализовано (из BRIEF.md §§3–4)
 
-- **Фаза 5:** GapAnalysisService (п.7) + Gap Analysis UI (п.4, §4)
 - **Фаза 6:** GroupingService (п.8) + AdGenerationService (п.9) + Ad Groups preview UI
 - **Фаза 7:** ExportService (п.10) + export history UI
 - **§4**: Settings page (volume threshold, forbidden/brand terms editors)

@@ -63,6 +63,7 @@ return [
     'nav.import' => 'Импорт',
     'nav.batches' => 'История',
     'nav.keywords' => 'Ключевые слова',
+    'nav.gap_analysis' => 'Gap Analysis',
     'nav.login' => 'Вход',
     'nav.logout' => 'Выход ({username})',
     'nav.toggle_dark' => 'Переключить тему',
@@ -153,6 +154,15 @@ return [
     'keywords.rejection_reason' => 'Причина отклонения',
     'keywords.override' => 'Изменить',
     'keywords.override_done' => 'Статус обновлён.',
+
+    // Gap Analysis
+    'gap.title' => 'Gap Analysis',
+    'gap.description' => 'Конкурентные возможности по ключевым словам',
+    'gap.hint' => 'Ключевые слова, которые конкуренты таргетируют (через Ahrefs Paid), но site.pro пока не охватывает в Google Ads или Search Console. Приоритизируйте по объёму поиска.',
+    'gap.refresh' => 'Обновить отчёт',
+    'gap.no_candidates' => 'Кандидатов не найдено. Импортируйте данные Ahrefs Paid, чтобы увидеть ключевые слова конкурентов, не покрытые текущими кампаниями.',
+    'gap.total' => 'Найдено кандидатов',
+    'gap.total_volume' => 'Суммарный объём',
 
     // Classification
     'class.title' => 'Классификация ключевых слов',

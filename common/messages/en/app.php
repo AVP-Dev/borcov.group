@@ -63,6 +63,7 @@ return [
     'nav.import' => 'Import',
     'nav.batches' => 'Batches',
     'nav.keywords' => 'Keywords',
+    'nav.gap_analysis' => 'Gap Analysis',
     'nav.login' => 'Login',
     'nav.logout' => 'Logout ({username})',
     'nav.toggle_dark' => 'Toggle dark mode',
@@ -153,6 +154,15 @@ return [
     'keywords.rejection_reason' => 'Rejection Reason',
     'keywords.override' => 'Override',
     'keywords.override_done' => 'Status updated successfully.',
+
+    // Gap Analysis
+    'gap.title' => 'Gap Analysis',
+    'gap.description' => 'Competitor keyword opportunities',
+    'gap.hint' => 'Keywords that competitors target (via Ahrefs Paid) but site.pro does not currently cover in Google Ads or Search Console. Prioritise by volume.',
+    'gap.refresh' => 'Refresh Report',
+    'gap.no_candidates' => 'No gap candidates found. Import Ahrefs Paid data to see competitor keywords not covered by current campaigns.',
+    'gap.total' => 'Gap candidates found',
+    'gap.total_volume' => 'Total estimated volume',
 
     // Classification
     'class.title' => 'Classify Keywords',

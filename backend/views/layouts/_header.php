@@ -30,6 +30,11 @@ $items = [
         'visible' => !Yii::$app->user->isGuest,
     ],
     [
+        'label' => Yii::t('app', 'nav.gap_analysis'),
+        'url' => ['/gap-analysis/index'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
         'label' => Yii::t('app', 'nav.login'),
         'url' => ['/site/login'],
         'visible' => Yii::$app->user->isGuest,
