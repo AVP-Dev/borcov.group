@@ -71,7 +71,8 @@ return [
     'nav.ad_groups' => 'Группы объявлений',
     'nav.export' => 'Экспорт',
     'nav.login' => 'Вход',
-    'nav.logout' => 'Выход ({username})',
+    'nav.logout_btn' => 'Выйти',
+    'nav.logout_title' => 'Вы вошли как {username}',
     'nav.toggle_dark' => 'Переключить тему',
     'nav.language' => 'Язык',
 

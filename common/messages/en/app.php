@@ -71,7 +71,8 @@ return [
     'nav.ad_groups' => 'Ad Groups',
     'nav.export' => 'Export',
     'nav.login' => 'Login',
-    'nav.logout' => 'Logout ({username})',
+    'nav.logout_btn' => 'Exit',
+    'nav.logout_title' => 'Logged in as {username}',
     'nav.toggle_dark' => 'Toggle dark mode',
     'nav.language' => 'Language',
 
