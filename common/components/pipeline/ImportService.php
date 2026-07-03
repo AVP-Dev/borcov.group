@@ -12,6 +12,8 @@ use common\jobs\ImportJob;
 
 class ImportService extends Component
 {
+    public const EVENT_AFTER_IMPORT = 'afterImport';
+
     public function import(string $filePath, string $sourceType): ImportBatch
     {
         $source = Source::findOne(['type' => $sourceType]);

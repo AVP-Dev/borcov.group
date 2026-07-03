@@ -6,6 +6,7 @@ namespace common\jobs;
 
 use Yii;
 use yii\base\BaseObject;
+use yii\base\Event;
 use yii\queue\JobInterface;
 use common\models\ImportBatch;
 use common\models\Keyword;
@@ -69,6 +70,8 @@ class CleanJob extends BaseObject implements JobInterface
 
         $volumeFilter = new VolumeFilterService();
         $volumeFilter->filter($this->batchId);
+
+        Event::trigger(CleaningService::class, CleaningService::EVENT_AFTER_CLEANING, new \yii\base\Event(['sender' => $batch]));
 
         Yii::$app->queue->push(new ClassificationJob([
             'batchId' => $this->batchId,

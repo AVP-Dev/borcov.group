@@ -8,6 +8,8 @@ use common\models\Keyword;
 
 class ClassificationService
 {
+    public const EVENT_AFTER_CLASSIFICATION = 'afterClassification';
+
     private array $rules;
 
     public function __construct(?array $rules = null)

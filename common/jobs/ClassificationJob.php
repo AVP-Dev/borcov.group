@@ -6,6 +6,7 @@ namespace common\jobs;
 
 use Yii;
 use yii\base\BaseObject;
+use yii\base\Event;
 use yii\queue\JobInterface;
 use common\models\ImportBatch;
 use common\models\Keyword;
@@ -50,5 +51,7 @@ class ClassificationJob extends BaseObject implements JobInterface
 
             $keyword->save();
         }
+
+        Event::trigger(ClassificationService::class, ClassificationService::EVENT_AFTER_CLASSIFICATION, new \yii\base\Event(['sender' => $batch]));
     }
 }

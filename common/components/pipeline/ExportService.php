@@ -11,6 +11,8 @@ use Yii;
 
 class ExportService
 {
+    public const EVENT_AFTER_EXPORT = 'afterExport';
+
     private function getCampaignPrefix(): string
     {
         $config = require Yii::getAlias('@common/config/ad_generation.php');
@@ -171,6 +173,8 @@ class ExportService
         $batch->ads_count = $adsCount;
         $batch->keywords_count = $keywordCount;
         $batch->save();
+
+        \yii\base\Event::trigger(self::class, self::EVENT_AFTER_EXPORT, new \yii\base\Event(['sender' => $batch]));
 
         return [$filePath, $adsCount, $keywordCount];
     }

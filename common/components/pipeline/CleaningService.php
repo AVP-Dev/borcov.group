@@ -13,6 +13,8 @@ use common\models\Source;
 
 class CleaningService extends Component
 {
+    public const EVENT_AFTER_CLEANING = 'afterCleaning';
+
     public array $stopWords = [
         'free', 'cheap', 'best', 'top', 'buy', 'price', 'cost',
         'бесплатно', 'дешево', 'лучший', 'купить', 'цена',

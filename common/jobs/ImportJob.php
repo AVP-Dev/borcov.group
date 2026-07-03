@@ -6,12 +6,14 @@ namespace common\jobs;
 
 use Yii;
 use yii\base\BaseObject;
+use yii\base\Event;
 use yii\queue\JobInterface;
 use common\models\ImportBatch;
 use common\models\Keyword;
 use common\components\pipeline\SourceAdapterInterface;
 use common\components\pipeline\CsvAdapter;
 use common\components\pipeline\JsonAdapter;
+use common\components\pipeline\ImportService;
 use common\jobs\CleanJob;
 
 class ImportJob extends BaseObject implements JobInterface
@@ -133,6 +135,8 @@ class ImportJob extends BaseObject implements JobInterface
 
         $batch->status = ImportBatch::STATUS_DONE;
         $batch->save();
+
+        Event::trigger(ImportService::class, ImportService::EVENT_AFTER_IMPORT, new Event(['sender' => $batch]));
 
         $this->cleanupTempFile();
 
