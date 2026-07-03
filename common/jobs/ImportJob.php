@@ -59,6 +59,9 @@ class ImportJob extends BaseObject implements JobInterface
             $rawText = trim($row['keyword'] ?? '');
             if ($rawText === '') {
                 $rejected++;
+                if ($rejected <= 3) {
+                    Yii::warning("ImportJob #{$this->batchId}: row #{$total} has empty keyword. Row keys: " . implode(', ', array_keys($row)), __METHOD__);
+                }
                 continue;
             }
 
@@ -119,7 +122,10 @@ class ImportJob extends BaseObject implements JobInterface
         if ($ext === 'json') {
             return match ($sourceType) {
                 'search_console' => new JsonAdapter([
-                    'fieldMap' => ['keyword' => 'keys.0', 'volume' => 'impressions'],
+                    'fieldMap' => [
+                        'keyword' => ['keys.0', 'keyword', 'query', 'term', 'name'],
+                        'volume' => ['impressions', 'volume', 'clicks', 'count', 'search_volume'],
+                    ],
                 ]),
                 default => new JsonAdapter([
                     'fieldMap' => [
