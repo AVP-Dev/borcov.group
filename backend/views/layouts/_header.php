@@ -45,6 +45,11 @@ $items = [
         'visible' => !Yii::$app->user->isGuest,
     ],
     [
+        'label' => Yii::t('app', 'nav.settings'),
+        'url' => ['/settings/index'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
         'label' => Yii::t('app', 'nav.login'),
         'url' => ['/site/login'],
         'visible' => Yii::$app->user->isGuest,
