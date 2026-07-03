@@ -40,6 +40,11 @@ $items = [
         'visible' => !Yii::$app->user->isGuest,
     ],
     [
+        'label' => Yii::t('app', 'nav.export'),
+        'url' => ['/export/index'],
+        'visible' => !Yii::$app->user->isGuest,
+    ],
+    [
         'label' => Yii::t('app', 'nav.login'),
         'url' => ['/site/login'],
         'visible' => Yii::$app->user->isGuest,

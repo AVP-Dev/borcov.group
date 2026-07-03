@@ -65,6 +65,7 @@ return [
     'nav.keywords' => 'Keywords',
     'nav.gap_analysis' => 'Gap Analysis',
     'nav.ad_groups' => 'Ad Groups',
+    'nav.export' => 'Export',
     'nav.login' => 'Login',
     'nav.logout' => 'Logout ({username})',
     'nav.toggle_dark' => 'Toggle dark mode',
@@ -224,4 +225,17 @@ return [
     'ad.updated' => 'Ad updated successfully.',
     'ad.update_error' => 'Failed to update ad.',
     'ad.not_found' => 'Ad not found.',
+
+    // Export
+    'export.title' => 'Export',
+    'export.description' => 'Generate Google Ads Editor CSV with all draft ads. After export, ads are marked as exported.',
+    'export.create_btn' => 'Export All Draft Ads',
+    'export.confirm' => 'Generate CSV export of all draft ads? Ads will be marked as exported.',
+    'export.success' => 'Export complete: {ads} ads, {keywords} keywords.',
+    'export.nothing_to_export' => 'No draft ads to export.',
+    'export.not_found' => 'Export file not found.',
+    'export.exported_at' => 'Exported At',
+    'export.ads_count' => 'Ads',
+    'export.keywords_count' => 'Keywords',
+    'export.download' => 'Download',
 ];

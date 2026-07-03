@@ -65,6 +65,7 @@ return [
     'nav.keywords' => 'Ключевые слова',
     'nav.gap_analysis' => 'Gap Analysis',
     'nav.ad_groups' => 'Группы объявлений',
+    'nav.export' => 'Экспорт',
     'nav.login' => 'Вход',
     'nav.logout' => 'Выход ({username})',
     'nav.toggle_dark' => 'Переключить тему',
@@ -224,4 +225,17 @@ return [
     'ad.updated' => 'Объявление обновлено.',
     'ad.update_error' => 'Ошибка обновления объявления.',
     'ad.not_found' => 'Объявление не найдено.',
+
+    // Export
+    'export.title' => 'Экспорт',
+    'export.description' => 'Генерация CSV для Google Ads Editor со всеми черновиками объявлений. После экспорта объявления помечаются как экспортированные.',
+    'export.create_btn' => 'Экспортировать все черновики',
+    'export.confirm' => 'Сгенерировать CSV-экспорт всех черновиков? Объявления будут помечены как экспортированные.',
+    'export.success' => 'Экспорт завершён: {ads} объявлений, {keywords} ключевых слов.',
+    'export.nothing_to_export' => 'Нет черновиков для экспорта.',
+    'export.not_found' => 'Файл экспорта не найден.',
+    'export.exported_at' => 'Дата экспорта',
+    'export.ads_count' => 'Объявлений',
+    'export.keywords_count' => 'Ключевых слов',
+    'export.download' => 'Скачать',
 ];
