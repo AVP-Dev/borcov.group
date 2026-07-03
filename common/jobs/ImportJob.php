@@ -52,15 +52,19 @@ class ImportJob extends BaseObject implements JobInterface
         $total = 0;
         $accepted = 0;
         $rejected = 0;
+        $firstRowKeys = [];
 
         foreach ($adapter->parse($this->filePath) as $row) {
             $total++;
+            if ($total === 1) {
+                $firstRowKeys = array_keys($row);
+            }
 
             $rawText = trim($row['keyword'] ?? '');
             if ($rawText === '') {
                 $rejected++;
                 if ($rejected <= 3) {
-                    Yii::warning("ImportJob #{$this->batchId}: row #{$total} has empty keyword. Row keys: " . implode(', ', array_keys($row)), __METHOD__);
+                    Yii::warning("ImportJob #{$this->batchId}: row #{$total} has empty keyword. Available columns: " . json_encode(array_keys($row), JSON_UNESCAPED_UNICODE) . ". Values: " . json_encode($row, JSON_UNESCAPED_UNICODE), __METHOD__);
                 }
                 continue;
             }
@@ -98,6 +102,13 @@ class ImportJob extends BaseObject implements JobInterface
         $batch->rows_total = $total;
         $batch->rows_accepted = $accepted;
         $batch->rows_rejected = $rejected;
+
+        if ($total > 0 && $accepted === 0) {
+            $this->failBatch($batch, 'All ' . $total . ' rows rejected — no keyword column. Available: ' . implode(', ', $firstRowKeys));
+            $this->cleanupTempFile();
+            return;
+        }
+
         $batch->status = ImportBatch::STATUS_DONE;
         $batch->save();
 
@@ -161,8 +172,8 @@ class ImportJob extends BaseObject implements JobInterface
             'search_console' => new CsvAdapter([
                 'delimiter' => ',',
                 'columnMap' => [
-                    'keyword' => ['Search query', 'Поисковый запрос', 'Query', 'Top queries', 'keyword', 'Keyword'],
-                    'volume' => ['Impressions', 'Показы', 'Volume', 'volume'],
+                    'keyword' => ['Search query', 'Поисковый запрос', 'Top queries', 'Query', 'запрос', 'keyword', 'Keyword'],
+                    'volume' => ['Impressions', 'Показы', 'Volume', 'volume', 'impressions'],
                 ],
             ]),
             default => throw new \InvalidArgumentException("Unknown source type: $sourceType"),
