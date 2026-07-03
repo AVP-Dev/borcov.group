@@ -17,13 +17,17 @@ class VolumeFilterService extends Component
     public function __construct($config = [])
     {
         parent::__construct($config);
-        $dbVolume = Setting::get('pipeline.volume.min');
-        $dbSources = Setting::get('pipeline.volume.min_source_count');
-        if ($dbVolume !== '') {
-            $this->minVolume = (int)$dbVolume;
-        }
-        if ($dbSources !== '') {
-            $this->minSourceCount = (int)$dbSources;
+        try {
+            $dbVolume = Setting::get('pipeline.volume.min');
+            $dbSources = Setting::get('pipeline.volume.min_source_count');
+            if ($dbVolume !== '') {
+                $this->minVolume = (int)$dbVolume;
+            }
+            if ($dbSources !== '') {
+                $this->minSourceCount = (int)$dbSources;
+            }
+        } catch (\Exception $e) {
+            // settings table may not exist yet (e.g. in tests or first deploy)
         }
     }
 

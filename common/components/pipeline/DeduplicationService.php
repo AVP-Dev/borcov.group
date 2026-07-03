@@ -16,9 +16,13 @@ class DeduplicationService extends Component
     public function __construct($config = [])
     {
         parent::__construct($config);
-        $dbValue = Setting::get('pipeline.dedup.similarity_threshold');
-        if ($dbValue !== '') {
-            $this->similarityThreshold = (float)$dbValue;
+        try {
+            $dbValue = Setting::get('pipeline.dedup.similarity_threshold');
+            if ($dbValue !== '') {
+                $this->similarityThreshold = (float)$dbValue;
+            }
+        } catch (\Exception $e) {
+            // settings table may not exist yet (e.g. in tests or first deploy)
         }
     }
 

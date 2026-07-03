@@ -10,6 +10,7 @@ use common\components\pipeline\LlmAdGenerator;
 use common\components\pipeline\TemplateAdGenerator;
 use common\models\Ad;
 use common\models\AdGroup;
+use common\models\Keyword;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
