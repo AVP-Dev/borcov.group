@@ -16,6 +16,8 @@ echo "[1/5] Generated cookieValidationKey"
 # 2. Generate local configs if missing (first run in fresh environment)
 # -------------------------------------------------------
 BACKEND_CONFIG="/var/www/html/backend/config/main-local.php"
+BACKEND_INDEX="/var/www/html/backend/web/index.php"
+FRONTEND_INDEX="/var/www/html/frontend/web/index.php"
 FRONTEND_CONFIG="/var/www/html/frontend/config/main-local.php"
 COMMON_CONFIG="/var/www/html/common/config/main-local.php"
 
@@ -44,6 +46,29 @@ file_put_contents('${cfg}', \$config);
     fi
 done
 echo "[3/5] cookieValidationKey injected"
+
+# -------------------------------------------------------
+# 3b. Patch index.php to read YII_DEBUG and YII_ENV from env vars
+# -------------------------------------------------------
+for idx in "$BACKEND_INDEX" "$FRONTEND_INDEX"; do
+    if [ -f "$idx" ]; then
+        php -r "
+\$code = file_get_contents('${idx}');
+\$code = str_replace(
+    \"define('YII_DEBUG', false)\",
+    \"define('YII_DEBUG', (bool)getenv('YII_DEBUG') ?: false)\",
+    \$code
+);
+\$code = str_replace(
+    \"define('YII_ENV', 'prod')\",
+    \"define('YII_ENV', getenv('YII_ENV') ?: 'prod')\",
+    \$code
+);
+file_put_contents('${idx}', \$code);
+"
+        echo "      Patched YII_DEBUG/YII_ENV in $(basename $idx)"
+    fi
+done
 
 # -------------------------------------------------------
 # 4. Write DB config (PostgreSQL) from environment variables
