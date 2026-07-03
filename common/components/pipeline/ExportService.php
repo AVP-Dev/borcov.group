@@ -58,6 +58,7 @@ class ExportService
      * @return array{string, int, int} [filePath, adsCount, keywordsCount]
      */
     private function doExport(array $ads): array
+    {
 
         $exportDir = Yii::getAlias('@common/runtime/exports');
         if (!is_dir($exportDir)) {

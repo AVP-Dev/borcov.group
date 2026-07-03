@@ -36,7 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="mb-3">
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="select-all"><?= Yii::t('app', 'export.select_all') ?></button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="deselect-all"><?= Yii::t('app', 'export.deselect_all') ?></button>
-                    <span class="ms-2 text-muted" id="selected-count">0 <?= Yii::t('app', 'export.selected') ?></span>
+                    <span class="ms-2 text-muted" id="selected-count" data-selected-text="<?= Yii::t('app', 'export.selected') ?>">0 <?= Yii::t('app', 'export.selected') ?></span>
                 </div>
 
                 <div class="table-responsive">
@@ -121,43 +121,53 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <?php
-$this->registerJs(<<<JS
-const checkAll = document.getElementById('check-all');
-const adChecks = document.querySelectorAll('.ad-check');
-const selectAllBtn = document.getElementById('select-all');
-const deselectAllBtn = document.getElementById('deselect-all');
-const selectedCount = document.getElementById('selected-count');
-const exportBtn = document.getElementById('export-btn');
+$this->registerJs(<<<'JS'
+var checkAll = document.getElementById('check-all');
+var adChecks = document.querySelectorAll('.ad-check');
+var selectAllBtn = document.getElementById('select-all');
+var deselectAllBtn = document.getElementById('deselect-all');
+var selectedCount = document.getElementById('selected-count');
+var exportBtn = document.getElementById('export-btn');
+var selectedText = selectedCount ? selectedCount.getAttribute('data-selected-text') : 'selected';
 
 function updateCount() {
-    const count = document.querySelectorAll('.ad-check:checked').length;
-    selectedCount.textContent = count + ' <?= Yii::t('app', 'export.selected') ?>';
-    exportBtn.disabled = count === 0;
+    var count = document.querySelectorAll('.ad-check:checked').length;
+    if (selectedCount) selectedCount.textContent = count + ' ' + selectedText;
+    if (exportBtn) exportBtn.disabled = count === 0;
 }
 
-checkAll?.addEventListener('change', function() {
-    adChecks.forEach(cb => cb.checked = this.checked);
-    updateCount();
+if (checkAll) {
+    checkAll.addEventListener('change', function() {
+        adChecks.forEach(function(cb) { cb.checked = checkAll.checked; });
+        updateCount();
+    });
+}
+
+adChecks.forEach(function(cb) {
+    cb.addEventListener('change', updateCount);
 });
 
-adChecks.forEach(cb => cb.addEventListener('change', updateCount));
+if (selectAllBtn) {
+    selectAllBtn.addEventListener('click', function() {
+        adChecks.forEach(function(cb) { cb.checked = true; });
+        if (checkAll) checkAll.checked = true;
+        updateCount();
+    });
+}
 
-selectAllBtn?.addEventListener('click', function() {
-    adChecks.forEach(cb => cb.checked = true);
-    checkAll.checked = true;
-    updateCount();
-});
+if (deselectAllBtn) {
+    deselectAllBtn.addEventListener('click', function() {
+        adChecks.forEach(function(cb) { cb.checked = false; });
+        if (checkAll) checkAll.checked = false;
+        updateCount();
+    });
+}
 
-deselectAllBtn?.addEventListener('click', function() {
-    adChecks.forEach(cb => cb.checked = false);
-    checkAll.checked = false;
-    updateCount();
-});
-
-document.getElementById('export-btn')?.addEventListener('click', function() {
-    if (!this.form.checkValidity()) return;
-    this.classList.add('disabled');
-    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Exporting...';
-});
+if (exportBtn) {
+    exportBtn.addEventListener('click', function() {
+        this.classList.add('disabled');
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Exporting...';
+    });
+}
 JS);
 ?>
