@@ -21,17 +21,19 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    entrypoint: /docker/pg-entrypoint.sh
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/pg-entrypoint.sh:/docker/pg-entrypoint.sh
     environment:
       POSTGRES_DB: ${DB_NAME:-keyword_platform}
       POSTGRES_USER: ${DB_USER:-yii2}
       POSTGRES_PASSWORD: ${DB_PASS:-secret}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-yii2} -d ${DB_NAME:-keyword_platform}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 10
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
 volumes:

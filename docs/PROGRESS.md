@@ -263,6 +263,20 @@ ImportJob (upsert, hash idempotency)
 - **Tests**: 4 GroupingService (группировка, идемпотентность, без ready, с генератором), 5 TemplateAdGenerator (структура/длина/URL/подстановка/ру категория), 5 LlmAdGenerator (fallback на ошибку/пустой ключ/не-JSON/таймаут, парсинг ответа)
 - **Верификация:** 105 тестов, 192 assertions, PHPStan 0 errors (level 5)
 
+## Phase 6 — deploy: 502 PostgreSQL role fix
+
+- **Root cause of 502:** Fresh `docker compose up` on a production server with existing PostgreSQL persistent volume (initialized by Coolify's service wizard) — the `yii2` role didn't exist in the database. The app's `DB_USER=yii2` could not authenticate because PostgreSQL didn't know that role.
+- **Why it passed in dev:** Local development used `docker compose down -v` (volumes deleted) or a fresh environment where the `yii2` role was always created during PostgreSQL initialization.
+- **Fix 1 (`docker/entrypoint.sh`):**
+  - Health-check wait loop changed from PDO auth-based (which fails on unknown credentials) to TCP socket `fsockopen()` — no authentication needed
+  - New user/DB init block tries 4 credential combos (`DB_PASS`, `'postgres'`, `''`, `null`) to connect as `postgres` superuser
+  - Creates the `yii2` role and `keyword_platform` database on demand if they don't exist
+  - If all 4 connection attempts fail, prints a clear recovery message (`docker compose down -v && docker compose up -d`) and exits
+- **Fix 2:** `docker-compose.yaml` — PostgreSQL service must not use a named volume that was pre-initialized by Coolify's own PostgreSQL instance. If the volume is shared or pre-created, the solution is either: (a) remove the volume and let the compose file reinitialize, or (b) let the entrypoint create the missing role/database (Fix 1 covers this).
+- **Деплой:** push → Coolify auto-deploy → health check passes → login page loads without 502.
+
+---
+
 ## Что не реализовано (из BRIEF.md §§3–4)
 
 - **Фаза 7:** ExportService (п.10) + export history UI

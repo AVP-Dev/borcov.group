@@ -110,12 +110,12 @@ echo "Ensuring database user '${DB_USER}' and database '${DB_NAME}' exist..."
 php -r "
 \$created = false;
 
-// Try to connect as 'postgres' with the configured password
+// pg-entrypoint.sh adds trust auth for 172.0.0.0/8, so try
+// without password first, then with the configured password
 \$attempts = [
+    ['postgres', ''],
     ['postgres', '${DB_PASS}'],
     ['postgres', 'postgres'],
-    ['postgres', ''],
-    ['postgres', null],
 ];
 
 foreach (\$attempts as [\$user, \$pass]) {
@@ -131,9 +131,9 @@ foreach (\$attempts as [\$user, \$pass]) {
 }
 
 if (!\$created) {
-    echo \"  WARNING: could not connect as superuser to create '${DB_USER}'\n\";
-    echo \"  (the application will attempt direct connection below)\n\";
-    exit(0);
+    echo \"  FATAL: could not connect as superuser. Database needs manual fix.\n\";
+    echo \"  Try: docker compose down -v && docker compose up -d\n\";
+    exit(1);
 }
 
 // Check if role exists
