@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 /**
  * @var \yii\web\View $this
- * @var \yii\data\ActiveDataProvider $dataProvider
- * @var \yii\data\ActiveDataProvider $adsProvider
- * @var int $draftAdsCount
+ * @var \yii\data\ActiveDataProvider $historyProvider
+ * @var array<int, array{group: \common\models\AdGroup, total: int, draft: int, exported: int}> $groupStats
  */
 
-use common\models\Ad;
-use yii\grid\GridView;
+use common\models\AdGroup;
+use common\models\Keyword;
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 $this->title = Yii::t('app', 'export.title');
 $this->params['breadcrumbs'][] = $this->title;
@@ -23,42 +23,83 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <p class="text-muted"><?= Yii::t('app', 'export.description') ?></p>
 
-    <?php if ($draftAdsCount > 0): ?>
+    <?php if ($groupStats === []): ?>
+        <div class="alert alert-info">
+            <?= Yii::t('app', 'export.no_groups') ?>
+        </div>
+    <?php else: ?>
         <div class="card mb-4">
             <div class="card-header bg-transparent fw-semibold d-flex justify-content-between align-items-center">
-                <span><?= Yii::t('app', 'export.select_ads') ?></span>
-                <span class="badge bg-primary"><?= $draftAdsCount ?> <?= Yii::t('app', 'export.total_draft') ?></span>
+                <span><?= Yii::t('app', 'export.select_groups') ?></span>
+                <span class="text-muted small" id="selected-count">0 <?= Yii::t('app', 'export.selected_count') ?></span>
             </div>
             <div class="card-body">
                 <?= Html::beginForm(['create'], 'post', ['id' => 'export-form']) ?>
+                <?= Html::beginForm(['reset'], 'post', ['id' => 'reset-form', 'style' => 'display:none']) ?>
 
-                <div class="mb-3">
+                <div class="mb-3 d-flex gap-2 flex-wrap">
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="select-all"><?= Yii::t('app', 'export.select_all') ?></button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="deselect-all"><?= Yii::t('app', 'export.deselect_all') ?></button>
-                    <span class="ms-2 text-muted" id="selected-count" data-selected-text="<?= Yii::t('app', 'export.selected') ?>">0 <?= Yii::t('app', 'export.selected') ?></span>
+                    <span class="ms-2 text-muted small align-self-center" id="selected-detail"></span>
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th><input type="checkbox" id="check-all"></th>
-                                <th><?= Yii::t('app', 'export.ad_group') ?></th>
-                                <th><?= Yii::t('app', 'export.headline') ?> 1</th>
-                                <th><?= Yii::t('app', 'export.headline') ?> 2</th>
-                                <th><?= Yii::t('app', 'export.description_col') ?></th>
-                                <th><?= Yii::t('app', 'export.generator_col') ?></th>
+                                <th style="width:40px"><input type="checkbox" id="check-all"></th>
+                                <th><?= Yii::t('app', 'export.group_name') ?></th>
+                                <th><?= Yii::t('app', 'export.category') ?></th>
+                                <th><?= Yii::t('app', 'export.language') ?></th>
+                                <th class="text-center"><?= Yii::t('app', 'export.total_ads') ?></th>
+                                <th class="text-center"><?= Yii::t('app', 'export.draft_col') ?></th>
+                                <th class="text-center"><?= Yii::t('app', 'export.exported_col') ?></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($adsProvider->getModels() as $ad): ?>
-                                <tr>
-                                    <td><input type="checkbox" name="ad_ids[]" value="<?= $ad->id ?>" class="ad-check"></td>
-                                    <td><small class="text-muted"><?= Html::encode($ad->adGroup->theme_label ?? '—') ?></small></td>
-                                    <td><?= Html::encode(mb_substr($ad->headline_1, 0, 30)) ?></td>
-                                    <td><?= Html::encode(mb_substr($ad->headline_2, 0, 30)) ?></td>
-                                    <td><small><?= Html::encode(mb_substr($ad->description_1, 0, 50)) ?></small></td>
-                                    <td><span class="badge bg-<?= $ad->generator === 'template' ? 'secondary' : 'info' ?>"><?= Html::encode($ad->generator) ?></span></td>
+                            <?php foreach ($groupStats as $groupId => $stats): ?>
+                                <?php
+                                $group = $stats['group'];
+                                $categoryLabels = [
+                                    Keyword::CATEGORY_WEBSITE_BUILDER => Yii::t('app', 'class.category.website_builder'),
+                                    Keyword::CATEGORY_EMAIL => Yii::t('app', 'class.category.email'),
+                                    Keyword::CATEGORY_DOMAINS => Yii::t('app', 'class.category.domains'),
+                                    Keyword::CATEGORY_ACCOUNTING => Yii::t('app', 'class.category.accounting'),
+                                    Keyword::CATEGORY_INVOICING => Yii::t('app', 'class.category.invoicing'),
+                                    Keyword::CATEGORY_RESELLER => Yii::t('app', 'class.category.reseller'),
+                                    Keyword::CATEGORY_GENERAL_BRAND => Yii::t('app', 'class.category.general_brand'),
+                                ];
+                                $catLabel = $categoryLabels[$group->category] ?? $group->category;
+                                $audienceLabel = $group->audience_segment === Keyword::AUDIENCE_B2B
+                                    ? Yii::t('app', 'class.audience.b2b')
+                                    : Yii::t('app', 'class.audience.b2c');
+                                $groupName = $catLabel . ' · ' . $audienceLabel . ' · ' . strtoupper($group->language);
+                                if ($group->theme_label) {
+                                    $groupName = Html::encode($group->theme_label) . ' <small class="text-muted">(' . Html::encode($catLabel) . ' · ' . strtoupper($group->language) . ')</small>';
+                                }
+                                ?>
+                                <tr class="group-row" data-group-id="<?= $groupId ?>">
+                                    <td><input type="checkbox" name="group_ids[]" value="<?= $groupId ?>" class="group-check"></td>
+                                    <td>
+                                        <?= Html::a($groupName, ['/ad-groups/view', 'id' => $groupId], ['class' => 'text-decoration-none']) ?>
+                                    </td>
+                                    <td><span class="badge bg-info"><?= Html::encode($catLabel) ?></span></td>
+                                    <td><span class="badge bg-secondary"><?= strtoupper($group->language) ?></span></td>
+                                    <td class="text-center"><?= $stats['total'] ?></td>
+                                    <td class="text-center">
+                                        <?php if ($stats['draft'] > 0): ?>
+                                            <span class="badge bg-success"><?= $stats['draft'] ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">0</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <?php if ($stats['exported'] > 0): ?>
+                                            <span class="badge bg-secondary"><?= $stats['exported'] ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted">0</span>
+                                        <?php endif; ?>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -66,29 +107,32 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex gap-2">
+                        <?= Html::submitButton(
+                            Yii::t('app', 'export.export_groups'),
+                            ['class' => 'btn btn-primary', 'id' => 'export-btn', 'disabled' => true, 'form' => 'export-form'],
+                        ) ?>
+                        <?= Html::submitButton(
+                            Yii::t('app', 'export.reset_btn'),
+                            ['class' => 'btn btn-outline-warning', 'id' => 'reset-btn', 'disabled' => true, 'form' => 'reset-form'],
+                        ) ?>
+                    </div>
                     <?= Html::submitButton(
-                        Yii::t('app', 'export.export_selected'),
-                        ['class' => 'btn btn-primary', 'id' => 'export-btn', 'disabled' => true],
-                    ) ?>
-                    <?= Html::submitButton(
-                        Yii::t('app', 'export.export_all'),
-                        ['class' => 'btn btn-outline-primary', 'name' => 'export_all', 'value' => '1'],
+                        Yii::t('app', 'export.export_all_drafts'),
+                        ['class' => 'btn btn-outline-primary', 'name' => 'export_all', 'value' => '1', 'form' => 'export-form'],
                     ) ?>
                 </div>
 
                 <?= Html::endForm() ?>
+                <?= Html::endForm() ?>
             </div>
-        </div>
-    <?php else: ?>
-        <div class="alert alert-info">
-            <?= Yii::t('app', 'export.empty_hint') ?>
         </div>
     <?php endif; ?>
 
     <h4 class="mb-3"><?= Yii::t('app', 'export.history_title') ?></h4>
 
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
+    <?= \yii\grid\GridView::widget([
+        'dataProvider' => $historyProvider,
         'columns' => [
             'id',
             [
@@ -122,33 +166,52 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $this->registerJs(<<<'JS'
 var checkAll = document.getElementById('check-all');
-var adChecks = document.querySelectorAll('.ad-check');
+var groupChecks = document.querySelectorAll('.group-check');
 var selectAllBtn = document.getElementById('select-all');
 var deselectAllBtn = document.getElementById('deselect-all');
 var selectedCount = document.getElementById('selected-count');
 var exportBtn = document.getElementById('export-btn');
-var selectedText = selectedCount ? selectedCount.getAttribute('data-selected-text') : 'selected';
+var resetBtn = document.getElementById('reset-btn');
+var selectedText = '';
 
 function updateCount() {
-    var count = document.querySelectorAll('.ad-check:checked').length;
-    if (selectedCount) selectedCount.textContent = count + ' ' + selectedText;
+    var checked = document.querySelectorAll('.group-check:checked');
+    var count = checked.length;
+    var draftTotal = 0;
+    var exportedTotal = 0;
+
+    checked.forEach(function(cb) {
+        var row = cb.closest('.group-row');
+        if (row) {
+            var draftCell = row.querySelector('td:nth-child(6) .badge');
+            var exportedCell = row.querySelector('td:nth-child(7) .badge');
+            if (draftCell) draftTotal += parseInt(draftCell.textContent);
+            if (exportedCell) exportedTotal += parseInt(exportedCell.textContent);
+        }
+    });
+
+    if (selectedCount) {
+        selectedCount.textContent = count + ' ' + selectedText;
+    }
+
     if (exportBtn) exportBtn.disabled = count === 0;
+    if (resetBtn) resetBtn.disabled = count === 0 || exportedTotal === 0;
 }
 
 if (checkAll) {
     checkAll.addEventListener('change', function() {
-        adChecks.forEach(function(cb) { cb.checked = checkAll.checked; });
+        groupChecks.forEach(function(cb) { cb.checked = checkAll.checked; });
         updateCount();
     });
 }
 
-adChecks.forEach(function(cb) {
+groupChecks.forEach(function(cb) {
     cb.addEventListener('change', updateCount);
 });
 
 if (selectAllBtn) {
     selectAllBtn.addEventListener('click', function() {
-        adChecks.forEach(function(cb) { cb.checked = true; });
+        groupChecks.forEach(function(cb) { cb.checked = true; });
         if (checkAll) checkAll.checked = true;
         updateCount();
     });
@@ -156,7 +219,7 @@ if (selectAllBtn) {
 
 if (deselectAllBtn) {
     deselectAllBtn.addEventListener('click', function() {
-        adChecks.forEach(function(cb) { cb.checked = false; });
+        groupChecks.forEach(function(cb) { cb.checked = false; });
         if (checkAll) checkAll.checked = false;
         updateCount();
     });
@@ -166,6 +229,17 @@ if (exportBtn) {
     exportBtn.addEventListener('click', function() {
         this.classList.add('disabled');
         this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Exporting...';
+    });
+}
+
+if (resetBtn) {
+    resetBtn.addEventListener('click', function(e) {
+        if (!confirm('Reset exported ads in selected groups back to draft?')) {
+            e.preventDefault();
+            return;
+        }
+        this.classList.add('disabled');
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Resetting...';
     });
 }
 JS);

@@ -125,7 +125,7 @@ final class ExportServiceTest extends Unit
         verify($batch->file_path)->notEquals('');
     }
 
-    public function testExportMarksAdsAsExported(): void
+    public function testExportDoesNotChangeAdStatus(): void
     {
         $draftAds = Ad::find()->where(['status' => Ad::STATUS_DRAFT])->count();
         verify($draftAds)->greaterThan(0);
@@ -133,8 +133,39 @@ final class ExportServiceTest extends Unit
         $service = new ExportService();
         $service->export();
 
+        // Export should NOT change ad status — CSV generation is read-only
         $remainingDrafts = Ad::find()->where(['status' => Ad::STATUS_DRAFT])->count();
-        verify($remainingDrafts)->equals(0);
+        verify($remainingDrafts)->equals($draftAds);
+    }
+
+    public function testExportGroupsExportsAllAdsInGroup(): void
+    {
+        $group = AdGroup::find()->one();
+        verify($group)->notNull();
+
+        $service = new ExportService();
+        [$filePath, $adsCount, $keywordsCount] = $service->exportGroups([$group->id]);
+
+        verify($adsCount)->greaterThan(0);
+        verify($keywordsCount)->greaterThan(0);
+        verify(file_exists($filePath))->true();
+
+        @unlink($filePath);
+    }
+
+    public function testResetGroupsToDraft(): void
+    {
+        // First, manually set an ad to exported
+        $ad = Ad::find()->where(['status' => Ad::STATUS_DRAFT])->one();
+        verify($ad)->notNull();
+        $ad->status = Ad::STATUS_EXPORTED;
+        $ad->save();
+
+        $count = ExportService::resetGroupsToDraft([$ad->ad_group_id]);
+        verify($count)->greaterThan(0);
+
+        $ad->refresh();
+        verify($ad->status)->equals(Ad::STATUS_DRAFT);
     }
 
     public function testExportReturnsEmptyOnNoDrafts(): void

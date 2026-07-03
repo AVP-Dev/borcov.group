@@ -29,39 +29,31 @@ class ExportController extends Controller
 
     public function actionIndex(): string
     {
-        $dataProvider = new ActiveDataProvider([
+        $historyProvider = new ActiveDataProvider([
             'query' => ExportBatch::find()->orderBy(['id' => SORT_DESC]),
             'pagination' => ['pageSize' => 20],
         ]);
 
-        $draftAdsCount = \common\models\Ad::find()->where(['status' => \common\models\Ad::STATUS_DRAFT])->count();
-
-        $adsProvider = new ActiveDataProvider([
-            'query' => \common\models\Ad::find()
-                ->where(['status' => \common\models\Ad::STATUS_DRAFT])
-                ->orderBy(['id' => SORT_ASC]),
-            'pagination' => ['pageSize' => 50],
-        ]);
+        $groupStats = ExportService::getGroupedStats();
 
         return $this->render('index', [
-            'dataProvider' => $dataProvider,
-            'adsProvider' => $adsProvider,
-            'draftAdsCount' => $draftAdsCount,
+            'historyProvider' => $historyProvider,
+            'groupStats' => $groupStats,
         ]);
     }
 
     public function actionCreate(): Response
     {
+        $groupIds = Yii::$app->request->post('group_ids');
         $exportAll = Yii::$app->request->post('export_all') === '1';
-        $adIds = Yii::$app->request->post('ad_ids');
 
         $service = new ExportService();
 
         if ($exportAll) {
             [$filePath, $adsCount, $keywordsCount] = $service->export();
-        } elseif (is_array($adIds) && $adIds !== []) {
-            $adIds = array_map('intval', $adIds);
-            [$filePath, $adsCount, $keywordsCount] = $service->exportSelected($adIds);
+        } elseif (is_array($groupIds) && $groupIds !== []) {
+            $groupIds = array_map('intval', $groupIds);
+            [$filePath, $adsCount, $keywordsCount] = $service->exportGroups($groupIds);
         } else {
             Yii::$app->session->setFlash('warning', Yii::t('app', 'export.no_selection'));
             return $this->redirect(['index']);
@@ -75,6 +67,26 @@ class ExportController extends Controller
                 Yii::t('app', 'export.success', ['ads' => $adsCount, 'keywords' => $keywordsCount]),
             );
         }
+
+        return $this->redirect(['index']);
+    }
+
+    public function actionReset(): Response
+    {
+        $groupIds = Yii::$app->request->post('group_ids');
+
+        if (!is_array($groupIds) || $groupIds === []) {
+            Yii::$app->session->setFlash('warning', Yii::t('app', 'export.no_selection'));
+            return $this->redirect(['index']);
+        }
+
+        $groupIds = array_map('intval', $groupIds);
+        $count = ExportService::resetGroupsToDraft($groupIds);
+
+        Yii::$app->session->setFlash(
+            'success',
+            Yii::t('app', 'export.reset_success', ['count' => $count]),
+        );
 
         return $this->redirect(['index']);
     }

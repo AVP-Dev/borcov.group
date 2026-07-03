@@ -14,13 +14,32 @@ class ExportService
     private const string CAMPAIGN_PREFIX = 'site.pro';
 
     /**
+     * Export all ads from selected ad groups.
+     * @param int[] $groupIds
+     * @return array{string, int, int} [filePath, adsCount, keywordsCount]
+     */
+    public function exportGroups(array $groupIds): array
+    {
+        $ads = Ad::find()
+            ->where(['ad_group_id' => $groupIds])
+            ->orderBy(['ad_group_id' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+
+        if ($ads === []) {
+            return ['', 0, 0];
+        }
+
+        return $this->doExport($ads);
+    }
+
+    /**
      * @param int[] $adIds
      * @return array{string, int, int} [filePath, adsCount, keywordsCount]
      */
     public function exportSelected(array $adIds): array
     {
         $ads = Ad::find()
-            ->where(['id' => $adIds, 'status' => Ad::STATUS_DRAFT])
+            ->where(['id' => $adIds])
             ->orderBy(['id' => SORT_ASC])
             ->all();
 
@@ -32,6 +51,7 @@ class ExportService
     }
 
     /**
+     * Export all draft ads.
      * @return array{string, int, int} [filePath, adsCount, keywordsCount]
      */
     public function export(): array
@@ -141,12 +161,6 @@ class ExportService
 
         fclose($handle);
 
-        $exportedIds = array_map(fn(Ad $ad) => $ad->id, $ads);
-        Ad::updateAll(
-            ['status' => Ad::STATUS_EXPORTED],
-            ['id' => $exportedIds],
-        );
-
         $batch = new ExportBatch();
         $batch->created_at = time();
         $batch->file_path = $filePath;
@@ -155,5 +169,43 @@ class ExportService
         $batch->save();
 
         return [$filePath, $adsCount, $keywordCount];
+    }
+
+    /**
+     * Get ad groups with ad counts, ordered by category.
+     * @return array<int, array{group: AdGroup, total: int, draft: int, exported: int}>
+     */
+    public static function getGroupedStats(): array
+    {
+        $groups = AdGroup::find()->orderBy(['category' => SORT_ASC, 'language' => SORT_ASC])->all();
+        $result = [];
+
+        foreach ($groups as $group) {
+            $total = Ad::find()->where(['ad_group_id' => $group->id])->count();
+            $draft = Ad::find()->where(['ad_group_id' => $group->id, 'status' => Ad::STATUS_DRAFT])->count();
+            $exported = Ad::find()->where(['ad_group_id' => $group->id, 'status' => Ad::STATUS_EXPORTED])->count();
+
+            $result[$group->id] = [
+                'group' => $group,
+                'total' => (int)$total,
+                'draft' => (int)$draft,
+                'exported' => (int)$exported,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Reset exported ads in given groups back to draft.
+     * @param int[] $groupIds
+     * @return int number of ads reset
+     */
+    public static function resetGroupsToDraft(array $groupIds): int
+    {
+        return (int) Ad::updateAll(
+            ['status' => Ad::STATUS_DRAFT],
+            ['ad_group_id' => $groupIds, 'status' => Ad::STATUS_EXPORTED],
+        );
     }
 }
