@@ -108,6 +108,18 @@ final class CleaningServiceTest extends Unit
         verify($result['is_forbidden'])->true();
     }
 
+    public function testDetectsCompetitorBrandTypo(): void
+    {
+        $keyword = $this->makeKeyword('quarespace website builder', 'quarespace website builder');
+        $service = new CleaningService();
+        $service->brandFuzzyThreshold = 0.6;
+        $result = $service->clean($keyword);
+
+        verify($result['passed'])->false();
+        verify($result['is_brand'])->true();
+        verify($result['rejection_reason'])->stringContainsString('competitor_brand');
+    }
+
     public function testDetectsAhrefsArtifact(): void
     {
         $keyword = $this->makeKeyword('/', '/');
@@ -139,6 +151,7 @@ final class CleaningServiceTest extends Unit
             ['wix', false],
             ['tilda', false],
             ['wordpress', false],
+            ['squarespace', false],
         ];
         foreach ($terms as [$term, $ownBrand]) {
             $t = new BrandTerm();

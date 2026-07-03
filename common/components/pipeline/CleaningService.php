@@ -21,6 +21,8 @@ class CleaningService extends Component
         '/', '?', 'keyword', 'search term',
     ];
 
+    public float $brandFuzzyThreshold = 0.6;
+
     public function clean(Keyword $keyword): array
     {
         $result = [
@@ -100,7 +102,38 @@ class CleaningService extends Component
             }
         }
 
+        if (mb_strlen($text) >= 3) {
+            return $this->checkBrandFuzzy($text);
+        }
+
         return null;
+    }
+
+    private function checkBrandFuzzy(string $text): ?array
+    {
+        $result = Yii::$app->db->createCommand("
+            SELECT term, is_own_brand
+            FROM {{%brand_terms}}
+            WHERE EXISTS (
+                SELECT 1
+                FROM regexp_split_to_table(LOWER(:text), E'\\\\s+') AS word
+                WHERE word != ''
+                AND similarity(word, LOWER(term)) >= :threshold
+            )
+            ORDER BY is_own_brand DESC
+            LIMIT 1
+        ", [
+            ':text' => $text,
+            ':threshold' => $this->brandFuzzyThreshold,
+        ])->queryOne();
+
+        if ($result === false) {
+            return null;
+        }
+
+        return (bool)$result['is_own_brand']
+            ? ['keep' => true, 'reason' => null]
+            : ['keep' => false, 'reason' => Yii::t('app', 'clean.reason.competitor_brand')];
     }
 
     private function checkForbidden(Keyword $keyword): ?string
