@@ -108,7 +108,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 }
                                 $adsInGroup = $groupAds[$groupId] ?? [];
                                 ?>
-                                <tr class="group-row" data-group-id="<?= $groupId ?>" data-ad-ids="<?= Html::encode(implode(',', array_map(fn(Ad $a) => $a->id, $adsInGroup))) ?>">
+                                <tr class="group-row" data-group-id="<?= $groupId ?>" data-category="<?= $group->category ?>" data-language="<?= $group->language ?>" data-ad-ids="<?= Html::encode(implode(',', array_map(fn(Ad $a) => $a->id, $adsInGroup))) ?>">
                                     <td><input type="checkbox" name="group_ids[]" value="<?= $groupId ?>" class="group-check"></td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-link p-0 toggle-ads"
@@ -382,14 +382,12 @@ function applyFilters() {
     var lang = filterLang ? filterLang.value : '';
 
     document.querySelectorAll('.group-row').forEach(function(row) {
-        var catCell = row.querySelector('td:nth-child(4) .badge');
-        var langCell = row.querySelector('td:nth-child(5) .badge');
-        var rowCat = catCell ? catCell.textContent.trim().toLowerCase() : '';
-        var rowLang = langCell ? langCell.textContent.trim().toLowerCase() : '';
+        var rowCat = row.getAttribute('data-category') || '';
+        var rowLang = row.getAttribute('data-language') || '';
 
         var show = true;
-        if (cat && rowCat.indexOf(cat.toLowerCase()) === -1) show = false;
-        if (lang && rowLang !== lang.toLowerCase()) show = false;
+        if (cat && rowCat !== cat) show = false;
+        if (lang && rowLang !== lang) show = false;
 
         row.style.display = show ? '' : 'none';
 
