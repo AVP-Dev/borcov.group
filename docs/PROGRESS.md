@@ -35,4 +35,35 @@
 
 ---
 
-## Фазы 1-8: Начнутся после деплоя Фазы 0
+---
+
+## Фаза 1: Import — SourceAdapter, ImportService, Queue Job
+
+### Создано
+- [x] `common/models/Source.php` — ActiveRecord для таблицы sources (4 типа: gads, search_console, ahrefs_organic, ahrefs_paid)
+- [x] `common/models/ImportBatch.php` — ActiveRecord для import_batches (status: processing/done/failed)
+- [x] `common/models/Keyword.php` — ActiveRecord для keywords (TimestampBehavior, все статусы/категории/интенты)
+- [x] `common/components/pipeline/SourceAdapterInterface.php` — контракт `parse(string $filePath): iterable`
+- [x] `common/components/pipeline/CsvAdapter.php` — читает CSV с настраиваемым columnMap (delimiter, enclosure, header)
+- [x] `common/components/pipeline/JsonAdapter.php` — читает JSON с настраиваемым fieldMap, ищет rows/data/items
+- [x] `common/components/pipeline/ImportService.php` — хеширует файл (SHA-256), проверяет idempotency, создаёт ImportBatch, пушит ImportJob в очередь
+- [x] `common/jobs/ImportJob.php` — Queue job: выбирает адаптер по типу источника, парсит, upsert через `ON CONFLICT (normalized_text, source_id)`, обновляет статистику батча
+- [x] `console/migrations/m260703_000004_seed_sources.php` — seed 4 дефолтных источника
+- [x] `console/migrations/m260703_000005_add_import_unique_constraints.php` — UNIQUE на file_hash и (normalized_text, source_id)
+- [x] `console/migrations/m260703_000006_fix_queue_schema.php` — renamed created_at→pushed_at, добавил delay/priority (совместимость с yiisoft/yii2-queue v2.3.8)
+
+### Тесты
+- [x] `common/tests/Unit/pipeline/CsvAdapterTest.php` — 7 тестов (разные источники, quoted fields, missing volume, missing file)
+- [x] `common/tests/Unit/pipeline/JsonAdapterTest.php` — 6 тестов (Search Console JSON, custom fieldMap, invalid JSON, non-existent file)
+- [x] `common/tests/Unit/pipeline/ImportServiceTest.php` — 6 тестов (создание батча, idempotency, разные источники, JSON source, ошибки)
+- [x] Итого: **22 теста, 50 ассершнов** — все проходят
+
+### Статический анализ
+- [x] PHPStan level 5 — 0 ошибок в новом коде (2 pre-existing в backend/controllers и views)
+- [x] Добавлены `common/components/pipeline/` и `common/jobs/` в phpstan.neon
+
+### i18n
+- [x] Добавлены 20 новых ключей (en/ru): заголовки, ошибки, статусы, названия источников
+
+### Деплой
+- [ ] Деплой на Coolify — ожидает подтверждения
