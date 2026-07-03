@@ -92,9 +92,39 @@ JS;
 $this->registerJs($overrideJs);
 ?>
 
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <?= Html::beginForm(['index'], 'get', ['class' => 'row gx-2 gy-1 align-items-center']) ?>
+                <div class="col-auto">
+                    <label class="col-form-label col-form-label-sm"><?= Yii::t('app', 'keywords.per_page') ?>:</label>
+                </div>
+                <div class="col-auto">
+                    <?= Html::dropDownList('per-page', Yii::$app->request->get('per-page', 50), [10 => 10, 20 => 20, 50 => 50, 100 => 100, 200 => 200], [
+                        'class' => 'form-select form-select-sm',
+                        'onchange' => 'this.form.submit()',
+                    ]) ?>
+                </div>
+                <?php foreach (Yii::$app->request->get() as $k => $v): ?>
+                    <?php if ($k !== 'per-page' && is_string($v)): ?>
+                        <?= Html::hiddenInput($k, $v) ?>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            <?= Html::endForm() ?>
+        </div>
+        <small class="text-muted">
+            <?= $dataProvider->totalCount ?> <?= Yii::t('app', 'keywords.total') ?>,
+            <?= $dataProvider->pagination->page + 1 ?>/<?= $dataProvider->pagination->pageCount ?>
+        </small>
+    </div>
+
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        'tableOptions' => ['class' => 'table table-striped table-bordered table-sm'],
+        'tableOptions' => ['class' => 'table table-striped table-bordered table-sm mb-0'],
+        'pager' => [
+            'class' => \yii\bootstrap5\LinkPager::class,
+            'maxButtonCount' => 7,
+            'options' => ['class' => 'pagination pagination-sm justify-content-center mb-0'],
+        ],
         'columns' => [
             'id',
             [

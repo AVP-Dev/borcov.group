@@ -161,6 +161,8 @@ return [
     'keywords.rejection_reason' => 'Rejection Reason',
     'keywords.override' => 'Override',
     'keywords.override_done' => 'Status updated successfully.',
+    'keywords.per_page' => 'Per page',
+    'keywords.total' => 'total',
 
     // Gap Analysis
     'gap.title' => 'Gap Analysis',

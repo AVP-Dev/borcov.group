@@ -161,6 +161,8 @@ return [
     'keywords.rejection_reason' => 'Причина отклонения',
     'keywords.override' => 'Изменить',
     'keywords.override_done' => 'Статус обновлён.',
+    'keywords.per_page' => 'На странице',
+    'keywords.total' => 'всего',
 
     // Gap Analysis
     'gap.title' => 'Gap Analysis',

@@ -57,9 +57,15 @@ class KeywordController extends Controller
             $query->andWhere(['ilike', 'normalized_text', $params['Keyword']['search']]);
         }
 
+        $pageSize = (int) Yii::$app->request->get('per-page', 50);
+        $pageSize = max(10, min(200, $pageSize));
+
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
-            'pagination' => ['pageSize' => 50],
+            'pagination' => [
+                'pageSize' => $pageSize,
+                'pageSizeParam' => 'per-page',
+            ],
         ]);
 
         $sources = Source::find()->all();
