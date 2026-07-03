@@ -11,7 +11,17 @@ use Yii;
 class LlmAdGenerator implements AdGeneratorInterface
 {
     private const string API_URL = 'https://api.deepseek.com/v1/chat/completions';
-    private const int TIMEOUT_SEC = 15;
+    private const int TIMEOUT_SEC = 10;
+
+    /**
+     * @var float|null time limit for batch generation.
+     * When set, generation stops after this many seconds and returns template ads.
+     * Prevents timeout death during Generate All.
+     */
+    public ?float $timeBudget = null;
+
+    /** @var float start time of the generation, set by first generate() call */
+    private float $startTime = 0.0;
 
     public TemplateAdGenerator $fallback;
 
@@ -40,6 +50,17 @@ class LlmAdGenerator implements AdGeneratorInterface
 
     public function generate(AdGroup $group, Keyword $keyword): array
     {
+        // Initialize start time on first call
+        if ($this->startTime === 0.0) {
+            $this->startTime = microtime(true);
+        }
+
+        // Time budget check: if exceeded, use template fallback immediately
+        if ($this->timeBudget !== null && (microtime(true) - $this->startTime) > $this->timeBudget) {
+            Yii::warning('LlmAdGenerator: time budget (' . $this->timeBudget . 's) exceeded, falling back to template', __METHOD__);
+            return $this->markFallback($this->fallback->generate($group, $keyword));
+        }
+
         $apiKey = Yii::$app->params['deepseekApiKey'] ?? '';
         if ($apiKey === '') {
             return $this->markFallback($this->fallback->generate($group, $keyword));

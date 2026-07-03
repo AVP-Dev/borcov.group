@@ -42,6 +42,8 @@ RUN composer install --no-dev --no-interaction --optimize-autoloader --prefer-di
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/entrypoint.sh /entrypoint.sh
+COPY docker/php.ini /usr/local/etc/php/conf.d/zz-pipeline.ini
+COPY docker/zz-www.conf /usr/local/etc/php-fpm.d/zz-pipeline.conf
 
 RUN chmod +x /entrypoint.sh
 

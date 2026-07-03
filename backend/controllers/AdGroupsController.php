@@ -81,9 +81,13 @@ class AdGroupsController extends Controller
     public function actionGenerate(): \yii\web\Response
     {
         $generatorType = Yii::$app->request->post('generator', 'template');
-        $generator = $generatorType === 'llm' && $this->isDeepSeekAvailable()
-            ? new LlmAdGenerator()
-            : new TemplateAdGenerator();
+        if ($generatorType === 'llm' && $this->isDeepSeekAvailable()) {
+            $gen = new LlmAdGenerator();
+            $gen->timeBudget = 25.0;
+            $generator = $gen;
+        } else {
+            $generator = new TemplateAdGenerator();
+        }
 
         $service = new GroupingService($generator);
         [$groupsCreated, $adsGenerated] = $service->groupAll();
@@ -126,9 +130,13 @@ class AdGroupsController extends Controller
         }
 
         $generatorType = Yii::$app->request->post('generator', 'template');
-        $generator = $generatorType === 'llm' && $this->isDeepSeekAvailable()
-            ? new LlmAdGenerator()
-            : new TemplateAdGenerator();
+        if ($generatorType === 'llm' && $this->isDeepSeekAvailable()) {
+            $gen = new LlmAdGenerator();
+            $gen->timeBudget = 25.0;
+            $generator = $gen;
+        } else {
+            $generator = new TemplateAdGenerator();
+        }
 
         $service = new GroupingService($generator);
         $count = $service->regenerateForGroup($id);
