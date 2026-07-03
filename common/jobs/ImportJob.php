@@ -194,7 +194,7 @@ class ImportJob extends BaseObject implements JobInterface
             'search_console' => new CsvAdapter([
                 'delimiter' => ',',
                 'columnMap' => [
-                    'keyword' => ['Search query', 'Поисковый запрос', 'Top queries', 'Query', 'запрос', 'keyword', 'Keyword'],
+                    'keyword' => ['Search query', 'Поисковый запрос', 'Популярные запросы', 'Top queries', 'Query', 'запрос', 'keyword', 'Keyword'],
                     'volume' => ['Impressions', 'Показы', 'Volume', 'volume', 'impressions'],
                 ],
             ]),
