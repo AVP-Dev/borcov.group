@@ -48,7 +48,7 @@ class LlmAdGenerator implements AdGeneratorInterface
         $lang = $keyword->language ?: $group->language ?: 'en';
         $prompt = $this->buildPrompt($keyword, $group, $lang);
 
-        [$status, $body] = $this->callApi($apiKey, $prompt);
+        [$status, $body] = $this->callApi($apiKey, $prompt, $lang);
 
         if ($status !== 200 || $body === '') {
             return $this->markFallback($this->fallback->generate($group, $keyword));
@@ -101,16 +101,21 @@ class LlmAdGenerator implements AdGeneratorInterface
         return $result;
     }
 
-    private function callApi(string $apiKey, string $prompt): array
+    private function callApi(string $apiKey, string $prompt, string $lang): array
     {
+        $adConfig = Yii::$app->params['adGeneration'] ?? [];
+        $systemPromptKey = "system_prompt_{$lang}";
+        $systemPrompt = $adConfig[$systemPromptKey] ?? $adConfig['system_prompt_en']
+            ?? 'You are a Google Ads copywriter. Generate RSA ad components. Respond with JSON only.';
+
         $payload = json_encode([
             'model' => 'deepseek-chat',
             'messages' => [
-                ['role' => 'system', 'content' => 'You are a Google Ads copywriter. Generate RSA ad components. Respond with JSON only.'],
+                ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user', 'content' => $prompt],
             ],
             'temperature' => 0.7,
-            'max_tokens' => 500,
+            'max_tokens' => 800,
         ], JSON_UNESCAPED_UNICODE);
 
         $url = self::API_URL;
@@ -127,14 +132,32 @@ class LlmAdGenerator implements AdGeneratorInterface
 
     private function buildPrompt(Keyword $keyword, AdGroup $group, string $lang): string
     {
+        $adConfig = Yii::$app->params['adGeneration'] ?? [];
+        $brandName = $adConfig['brand_name'] ?? 'site.pro';
+        $brandDescription = $adConfig['brand_description'] ?? 'online business platform';
+
+        $categories = $adConfig['categories'] ?? [];
+        $catConfig = $categories[$group->category] ?? [];
+
+        $catDescription = $catConfig["description_{$lang}"] ?? $catConfig['description_en'] ?? '';
+        $catUsp = $catConfig["usp_{$lang}"] ?? $catConfig['usp_en'] ?? '';
+
         $url = $this->fallback->categoryUrlMap[$group->category] ?? '/';
-        return "Generate 3 Google Responsive Search Ads for keyword \"{$keyword->raw_text}\" "
-            . "(normalized: \"{$keyword->normalized_text}\") in {$lang} language. "
-            . "Category: {$group->category}. "
-            . "Return JSON array: [{\"headline1\":\"...\",\"headline2\":\"...\",\"headline3\":\"...\","
-            . "\"description1\":\"...\",\"description2\":\"...\",\"path1\":\"...\",\"path2\":\"...\"}]. "
-            . "Max 30 chars per headline, 90 per description, 15 per path. "
-            . "URL: {$url}";
+
+        return "You are writing Google RSA (Responsive Search Ads) for {$brandName} — {$brandDescription}.\n\n"
+            . "PRODUCT LINE: {$catDescription}\n"
+            . "USP: {$catUsp}\n"
+            . "TARGET KEYWORD: \"{$keyword->raw_text}\" (normalized: \"{$keyword->normalized_text}\")\n"
+            . "AUDIENCE: {$group->audience_segment}\n"
+            . "LANGUAGE: {$lang} — respond in this language\n"
+            . "URL: {$url}\n\n"
+            . "RULES:\n"
+            . "- Headlines max 30 chars, descriptions max 90 chars, paths max 15 chars\n"
+            . "- Each ad must be relevant to BOTH the keyword AND the product line\n"
+            . "- Include the keyword or a close variant in at least one headline per ad\n"
+            . "- Path1: category slug (e.g. \"email\", \"domains\"), Path2: null\n\n"
+            . "Return a JSON array of exactly 3 ads: "
+            . "[{\"headline1\":\"...\",\"headline2\":\"...\",\"description1\":\"...\",\"path1\":\"...\",\"path2\":\"...\"}]";
     }
 
     /** @return AdData[] */

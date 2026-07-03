@@ -25,6 +25,7 @@ final class LlmAdGeneratorTest extends Unit
         parent::_setUp();
         Yii::$app->params['deepseekApiKey'] = 'test-key';
         Yii::$app->params['siteUrl'] = 'https://site.pro';
+        Yii::$app->params['adGeneration'] = require __DIR__ . '/../../../config/ad_generation.php';
 
         $this->group = new AdGroup();
         $this->group->category = Keyword::CATEGORY_WEBSITE_BUILDER;
@@ -43,6 +44,7 @@ final class LlmAdGeneratorTest extends Unit
     {
         unset(Yii::$app->params['deepseekApiKey']);
         unset(Yii::$app->params['siteUrl']);
+        unset(Yii::$app->params['adGeneration']);
         parent::_tearDown();
     }
 
@@ -137,6 +139,92 @@ final class LlmAdGeneratorTest extends Unit
         verify(mb_strlen($ads[0]->headline1) <= AdGeneratorInterface::MAX_HEADLINE_LENGTH);
         verify(mb_strlen($ads[0]->description1) <= AdGeneratorInterface::MAX_DESCRIPTION_LENGTH);
         verify($ads[0]->path1)->stringContainsString('website-builder');
+    }
+
+    public function testPromptIncludesBrandContext(): void
+    {
+        $capturedPayload = '';
+        $httpMock = function (string $url, array $headers, int $timeout) use (&$capturedPayload): array {
+            $capturedPayload = $headers['__body__'] ?? '';
+            return [200, '{}'];
+        };
+
+        $generator = new LlmAdGenerator(null, $httpMock);
+        $generator->generate($this->group, $this->keyword);
+
+        $payload = json_decode($capturedPayload, true);
+        $prompt = $payload['messages'][1]['content'] ?? '';
+        verify($prompt)->stringContainsString('site.pro');
+        verify($prompt)->stringContainsString('online business platform');
+    }
+
+    public function testPromptIncludesCategoryContext(): void
+    {
+        $capturedPayload = '';
+        $httpMock = function (string $url, array $headers, int $timeout) use (&$capturedPayload): array {
+            $capturedPayload = $headers['__body__'] ?? '';
+            return [200, '{}'];
+        };
+
+        $this->group->category = Keyword::CATEGORY_EMAIL;
+        $generator = new LlmAdGenerator(null, $httpMock);
+        $generator->generate($this->group, $this->keyword);
+
+        $payload = json_decode($capturedPayload, true);
+        $prompt = $payload['messages'][1]['content'] ?? '';
+        verify($prompt)->stringContainsString('email');
+        verify($prompt)->stringContainsString('IMAP');
+    }
+
+    public function testPromptUsesLanguage(): void
+    {
+        $capturedPayload = '';
+        $httpMock = function (string $url, array $headers, int $timeout) use (&$capturedPayload): array {
+            $capturedPayload = $headers['__body__'] ?? '';
+            return [200, '{}'];
+        };
+
+        $this->group->language = 'ru';
+        $this->keyword->language = 'ru';
+        $generator = new LlmAdGenerator(null, $httpMock);
+        $generator->generate($this->group, $this->keyword);
+
+        $payload = json_decode($capturedPayload, true);
+        $prompt = $payload['messages'][1]['content'] ?? '';
+        verify($prompt)->stringContainsString('ru');
+    }
+
+    public function testPromptIncludesAudienceSegment(): void
+    {
+        $capturedPayload = '';
+        $httpMock = function (string $url, array $headers, int $timeout) use (&$capturedPayload): array {
+            $capturedPayload = $headers['__body__'] ?? '';
+            return [200, '{}'];
+        };
+
+        $this->group->audience_segment = Keyword::AUDIENCE_B2B;
+        $generator = new LlmAdGenerator(null, $httpMock);
+        $generator->generate($this->group, $this->keyword);
+
+        $payload = json_decode($capturedPayload, true);
+        $prompt = $payload['messages'][1]['content'] ?? '';
+        verify(mb_stripos($prompt, 'b2b') !== false);
+    }
+
+    public function testSystemMessageIsEnriched(): void
+    {
+        $capturedPayload = '';
+        $httpMock = function (string $url, array $headers, int $timeout) use (&$capturedPayload): array {
+            $capturedPayload = $headers['__body__'] ?? '';
+            return [200, '{}'];
+        };
+
+        $generator = new LlmAdGenerator(null, $httpMock);
+        $generator->generate($this->group, $this->keyword);
+
+        $payload = json_decode($capturedPayload, true);
+        $systemMsg = $payload['messages'][0]['content'] ?? '';
+        verify($systemMsg)->stringContainsString('SaaS');
     }
 
     public function testLongDescriptionPassesFullTextToModel(): void

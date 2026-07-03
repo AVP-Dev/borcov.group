@@ -24,6 +24,7 @@ final class GroupingServiceTest extends Unit
     {
         parent::_setUp();
         Yii::$app->params['siteUrl'] = 'https://site.pro';
+        Yii::$app->params['adGeneration'] = require __DIR__ . '/../../../config/ad_generation.php';
         $this->seedSources();
         $this->seedBatch();
         $this->seedKeywords();
@@ -32,6 +33,7 @@ final class GroupingServiceTest extends Unit
     protected function _tearDown(): void
     {
         unset(Yii::$app->params['siteUrl']);
+        unset(Yii::$app->params['adGeneration']);
         parent::_tearDown();
     }
 

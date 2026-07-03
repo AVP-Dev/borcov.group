@@ -44,9 +44,17 @@ class AdGroupsController extends Controller
 
     public function actionGenerate(): \yii\web\Response
     {
-        $service = new GroupingService(new TemplateAdGenerator());
+        $generatorType = Yii::$app->request->post('generator', 'template');
+        $generator = $generatorType === 'llm' && $this->isDeepSeekAvailable()
+            ? new LlmAdGenerator()
+            : new TemplateAdGenerator();
+
+        $service = new GroupingService($generator);
         [$groupsCreated, $adsGenerated] = $service->groupAll();
 
+        $label = $generatorType === 'llm' && $this->isDeepSeekAvailable()
+            ? Yii::t('app', 'ad_groups.generator_llm')
+            : Yii::t('app', 'ad_groups.generator_template');
         Yii::$app->session->setFlash(
             'success',
             Yii::t('app', 'ad_groups.generated', ['groups' => $groupsCreated, 'ads' => $adsGenerated]),

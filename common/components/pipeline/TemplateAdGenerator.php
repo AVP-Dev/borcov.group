@@ -24,82 +24,39 @@ class TemplateAdGenerator implements AdGeneratorInterface
         Keyword::CATEGORY_UNCLASSIFIED => '/',
     ];
 
-    /** @var array<string, array<string, string>> language → category → USP */
-    public array $uspMap = [
-        'en' => [
-            Keyword::CATEGORY_WEBSITE_BUILDER => 'Create stunning websites in minutes. No coding needed.',
-            Keyword::CATEGORY_EMAIL => 'Professional email for your domain. 10GB+ storage.',
-            Keyword::CATEGORY_DOMAINS => 'Find your perfect domain name. Free privacy protection.',
-            Keyword::CATEGORY_ACCOUNTING => 'Smart accounting for small business. VAT ready.',
-            Keyword::CATEGORY_INVOICING => 'Professional invoices in seconds. Get paid faster.',
-            Keyword::CATEGORY_RESELLER => 'White-label hosting platform. Your brand, our infrastructure.',
-            Keyword::CATEGORY_GENERAL_BRAND => 'All-in-one online business platform.',
-            Keyword::CATEGORY_UNCLASSIFIED => 'Powerful tools for your online business.',
-        ],
-        'ru' => [
-            Keyword::CATEGORY_WEBSITE_BUILDER => 'Создайте сайт за минуты. Без кода и дизайнера.',
-            Keyword::CATEGORY_EMAIL => 'Профессиональная почта для вашего домена. 10ГБ+.',
-            Keyword::CATEGORY_DOMAINS => 'Найдите идеальное доменное имя. Защита конфиденциальности.',
-            Keyword::CATEGORY_ACCOUNTING => 'Умная бухгалтерия для малого бизнеса. С НДС.',
-            Keyword::CATEGORY_INVOICING => 'Счета за секунды. Получайте оплату быстрее.',
-            Keyword::CATEGORY_RESELLER => 'White-label платформа. Ваш бренд, наша инфраструктура.',
-            Keyword::CATEGORY_GENERAL_BRAND => 'Всё для онлайн-бизнеса в одной платформе.',
-            Keyword::CATEGORY_UNCLASSIFIED => 'Мощные инструменты для вашего онлайн-бизнеса.',
-        ],
-    ];
-
-    /** @var array<string, string[]> language → headline patterns */
-    public array $headlinePatterns = [
-        'en' => [
-            '{keyword}',
-            '{keyword} — Free',
-            'Best {keyword}',
-            '{keyword} Online',
-            '{keyword} Today',
-        ],
-        'ru' => [
-            '{keyword}',
-            '{keyword} — бесплатно',
-            '{keyword}: топ-решение',
-            '{keyword} онлайн',
-            '{keyword} сегодня',
-        ],
-    ];
-
-    /** @var array<string, string[]> language → description patterns */
-    public array $descriptionPatterns = [
-        'en' => [
-            '{usp} Start your free trial.',
-            'Try {keyword}. {usp}',
-            '{keyword}: {usp}',
-        ],
-        'ru' => [
-            '{usp} Начните бесплатно.',
-            '{keyword}: {usp}',
-            '{usp} Узнайте больше.',
-        ],
-    ];
-
     public function generate(AdGroup $group, Keyword $keyword): array
     {
         $lang = $this->resolveLanguage($group, $keyword);
-        $usp = $this->uspMap[$lang][$group->category] ?? $this->uspMap['en'][Keyword::CATEGORY_UNCLASSIFIED];
+        $adConfig = Yii::$app->params['adGeneration'] ?? [];
+        $categories = $adConfig['categories'] ?? [];
+        $catConfig = $categories[$group->category] ?? $categories[Keyword::CATEGORY_UNCLASSIFIED] ?? [];
+
+        $usp = $catConfig["usp_{$lang}"] ?? $catConfig['usp_en'] ?? '';
         $baseUrl = rtrim(Yii::$app->params['siteUrl'] ?? 'https://site.pro', '/');
         $targetUrl = $baseUrl . ($this->categoryUrlMap[$group->category] ?? '/');
         $path1 = $this->resolvePath1($group, $keyword);
 
         $keywordText = $keyword->normalized_text ?: $keyword->raw_text;
 
-        $headlines = $this->headlinePatterns[$lang] ?? $this->headlinePatterns['en'];
-        $descriptions = $this->descriptionPatterns[$lang] ?? $this->descriptionPatterns['en'];
+        $langHeadlines = $catConfig["headline_patterns_{$lang}"] ?? $catConfig['headline_patterns_en'] ?? [];
+        $langDescriptions = $catConfig["description_patterns_{$lang}"] ?? $catConfig['description_patterns_en'] ?? [];
+
+        if ($langHeadlines === []) {
+            $fallbackCat = $categories[Keyword::CATEGORY_UNCLASSIFIED] ?? [];
+            $langHeadlines = $fallbackCat["headline_patterns_{$lang}"] ?? $fallbackCat['headline_patterns_en'] ?? ['{keyword}'];
+        }
+        if ($langDescriptions === []) {
+            $fallbackCat = $categories[Keyword::CATEGORY_UNCLASSIFIED] ?? [];
+            $langDescriptions = $fallbackCat["description_patterns_{$lang}"] ?? $fallbackCat['description_patterns_en'] ?? ['{usp}'];
+        }
 
         $ads = [];
-        $pairCount = min(count($headlines), count($descriptions));
+        $pairCount = min(count($langHeadlines), count($langDescriptions));
 
         for ($i = 0; $i < $pairCount; $i++) {
-            $h1 = $this->mbUcfirst($this->fill($headlines[$i], $keywordText, $usp));
-            $h2 = $this->mbUcfirst($this->fill($headlines[($i + 1) % count($headlines)], $keywordText, $usp));
-            $d1 = $this->mbUcfirst($this->fill($descriptions[$i], $keywordText, $usp));
+            $h1 = $this->mbUcfirst($this->fill($langHeadlines[$i], $keywordText, $usp));
+            $h2 = $this->mbUcfirst($this->fill($langHeadlines[($i + 1) % count($langHeadlines)], $keywordText, $usp));
+            $d1 = $this->mbUcfirst($this->fill($langDescriptions[$i], $keywordText, $usp));
 
             $ads[] = new AdData(
                 headline1: $this->truncateWordSafe($h1, self::MAX_HEADLINE_LENGTH),

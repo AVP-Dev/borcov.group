@@ -172,7 +172,11 @@ document.querySelectorAll('.ad-edit-btn').forEach(btn => {
 const regenerateForm = document.querySelector('#regenerate-form');
 const regenerateBtn = document.getElementById('regenerate-btn');
 if (regenerateForm && regenerateBtn) {
-    regenerateForm.addEventListener('submit', function() {
+    regenerateForm.addEventListener('submit', function(e) {
+        if (!confirm('<?= Yii::t('app', 'ad_groups.regenerate_confirm') ?>')) {
+            e.preventDefault();
+            return;
+        }
         regenerateBtn.disabled = true;
         regenerateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Generating...';
     });

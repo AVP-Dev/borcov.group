@@ -220,6 +220,7 @@ return [
     'ad_groups.badge_ai' => 'AI',
     'ad_groups.badge_ai_fallback' => 'AI (fallback)',
     'ad_groups.badge_template' => 'Template',
+    'ad_groups.regenerate_confirm' => 'This will delete all existing ads in this group and regenerate them. Continue?',
     'ad.updated' => 'Ad updated successfully.',
     'ad.update_error' => 'Failed to update ad.',
     'ad.not_found' => 'Ad not found.',

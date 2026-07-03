@@ -20,6 +20,96 @@ final class TemplateAdGeneratorTest extends Unit
     {
         parent::_setUp();
         Yii::$app->params['siteUrl'] = 'https://site.pro';
+        Yii::$app->params['adGeneration'] = require __DIR__ . '/../../../config/ad_generation.php';
+    }
+
+    protected function _tearDown(): void
+    {
+        unset(Yii::$app->params['siteUrl']);
+        unset(Yii::$app->params['adGeneration']);
+        parent::_tearDown();
+    }
+
+    public function testHeadlinesContainCategoryContext(): void
+    {
+        $generator = new TemplateAdGenerator();
+
+        $categoryHeadlineCues = [
+            Keyword::CATEGORY_WEBSITE_BUILDER => ['Build', 'Site', 'Code'],
+            Keyword::CATEGORY_EMAIL => ['Email', 'Domain'],
+            Keyword::CATEGORY_DOMAINS => ['Register', 'TLD'],
+            Keyword::CATEGORY_ACCOUNTING => ['Accounting', 'VAT'],
+            Keyword::CATEGORY_INVOICING => ['Invoicing', 'Paid'],
+            Keyword::CATEGORY_RESELLER => ['White Label', 'Brand'],
+        ];
+
+        $shortKeywords = [
+            Keyword::CATEGORY_WEBSITE_BUILDER => 'builder',
+            Keyword::CATEGORY_EMAIL => 'email',
+            Keyword::CATEGORY_DOMAINS => 'domains',
+            Keyword::CATEGORY_ACCOUNTING => 'accounting',
+            Keyword::CATEGORY_INVOICING => 'invoicing',
+            Keyword::CATEGORY_RESELLER => 'hosting',
+        ];
+
+        foreach ($categoryHeadlineCues as $category => $cues) {
+            [$group, $keyword] = $this->makeGroupAndKeyword($category, Keyword::AUDIENCE_B2C, 'en', $shortKeywords[$category]);
+            $ads = $generator->generate($group, $keyword);
+
+            $allHeadlines = array_merge(
+                array_column($ads, 'headline1'),
+                array_column($ads, 'headline2'),
+            );
+            $combined = implode(' ', $allHeadlines);
+
+            $hasCue = false;
+            foreach ($cues as $cue) {
+                if (str_contains($combined, $cue)) {
+                    $hasCue = true;
+                    break;
+                }
+            }
+            verify($hasCue)->true("Category {$category} headlines should contain one of: " . implode(', ', $cues) . ". Got: " . $combined);
+        }
+    }
+
+    public function testCategorySpecificDescription(): void
+    {
+        $generator = new TemplateAdGenerator();
+        $categoryDescCues = [
+            Keyword::CATEGORY_WEBSITE_BUILDER => ['website', 'site'],
+            Keyword::CATEGORY_EMAIL => ['email', 'Email'],
+            Keyword::CATEGORY_DOMAINS => ['domain', 'Domain'],
+            Keyword::CATEGORY_ACCOUNTING => ['accounting', 'Accounting'],
+            Keyword::CATEGORY_INVOICING => ['invoice', 'Invoice', 'paid'],
+            Keyword::CATEGORY_RESELLER => ['White-label', 'White Label', 'white-label'],
+        ];
+
+        $shortKeywords = [
+            Keyword::CATEGORY_WEBSITE_BUILDER => 'builder',
+            Keyword::CATEGORY_EMAIL => 'email',
+            Keyword::CATEGORY_DOMAINS => 'domains',
+            Keyword::CATEGORY_ACCOUNTING => 'accounting',
+            Keyword::CATEGORY_INVOICING => 'invoicing',
+            Keyword::CATEGORY_RESELLER => 'hosting',
+        ];
+
+        foreach ($categoryDescCues as $category => $cues) {
+            [$group, $keyword] = $this->makeGroupAndKeyword($category, Keyword::AUDIENCE_B2C, 'en', $shortKeywords[$category]);
+            $ads = $generator->generate($group, $keyword);
+
+            $descriptions = array_column($ads, 'description1');
+            $combined = implode(' ', $descriptions);
+
+            $hasCue = false;
+            foreach ($cues as $cue) {
+                if (str_contains($combined, $cue)) {
+                    $hasCue = true;
+                    break;
+                }
+            }
+            verify($hasCue)->true("Category {$category} descriptions should contain one of: " . implode(', ', $cues) . ". Got: " . $combined);
+        }
     }
 
     public function testGeneratesAdsForWebsiteBuilderB2CEn(): void

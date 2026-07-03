@@ -220,6 +220,7 @@ return [
     'ad_groups.badge_ai' => 'AI',
     'ad_groups.badge_ai_fallback' => 'AI (запасной)',
     'ad_groups.badge_template' => 'Шаблон',
+    'ad_groups.regenerate_confirm' => 'Это удалит все текущие объявления в группе и сгенерирует новые. Продолжить?',
     'ad.updated' => 'Объявление обновлено.',
     'ad.update_error' => 'Ошибка обновления объявления.',
     'ad.not_found' => 'Объявление не найдено.',
