@@ -69,11 +69,12 @@ class ImportController extends Controller
             $batch = $service->import($filePath, $source->type);
             if ($batch->isNewRecord === false && $batch->status === ImportBatch::STATUS_DONE) {
                 Yii::$app->session->setFlash('info', Yii::t('app', 'import.duplicate_hash'));
-            } else {
-                Yii::$app->session->setFlash('success', Yii::t('app', 'import.completed'));
+                return $this->redirect(['/import/batches']);
             }
+            Yii::$app->session->setFlash('success', Yii::t('app', 'import.started'));
         } catch (\Throwable $e) {
             Yii::$app->session->setFlash('error', $e->getMessage());
+            return $this->redirect(['/import/index']);
         }
 
         return $this->redirect(['/import/batches']);
