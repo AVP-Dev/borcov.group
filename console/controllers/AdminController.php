@@ -11,8 +11,16 @@ use yii\console\ExitCode;
 
 class AdminController extends Controller
 {
-    public function actionSetPassword(string $password): int
+    public function actionSetPassword(string $password = ''): int
     {
+        if ($password === '') {
+            $password = getenv('ADMIN_PASSWORD');
+        }
+        if (empty($password)) {
+            echo "ERROR: No password provided via CLI argument or ADMIN_PASSWORD env.\n";
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
         $user = User::findByUsername('admin');
 
         if ($user === null) {

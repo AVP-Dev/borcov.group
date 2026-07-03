@@ -113,7 +113,7 @@ echo "      Migrations completed successfully"
 # Set admin user password from ADMIN_PASSWORD env var
 # -------------------------------------------------------
 echo "Setting admin user password..."
-php /var/www/html/yii admin/set-password \"$ADMIN_PASSWORD\"
+php /var/www/html/yii admin/set-password
 echo "      Admin password set"
 
 # -------------------------------------------------------
