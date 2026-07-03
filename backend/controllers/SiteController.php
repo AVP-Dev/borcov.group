@@ -27,7 +27,7 @@ class SiteController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['login', 'error', 'status', 'set-language'],
+                        'actions' => ['login', 'error', 'status', 'set-language', 'debug-user'],
                         'allow' => true,
                     ],
                     [
@@ -82,6 +82,21 @@ class SiteController extends Controller
             'app'    => 'Marketing Keyword Automation Platform',
             'phase'  => '-1 (skeleton)',
             'time'   => date('c'),
+        ]);
+    }
+
+    public function actionDebugUser(): \yii\web\Response
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $user = \common\models\User::findByUsername('admin');
+        if ($user === null) {
+            return $this->asJson(['exists' => false, 'error' => 'User not found']);
+        }
+        return $this->asJson([
+            'exists' => true,
+            'has_password_hash' => !empty($user->password_hash),
+            'hash_prefix' => substr($user->password_hash, 0, 10) . '...',
+            'status' => $user->status,
         ]);
     }
 
