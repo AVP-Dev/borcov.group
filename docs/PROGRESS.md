@@ -279,9 +279,47 @@ ImportJob (upsert, hash idempotency)
 
 ---
 
+## Phase 6.5 — Category-Specific Ad Generation + Configurable Brand
+
+### Проблема
+Объявления были generic ("Free Website Creator") для всех категорий. DeepSeek промпт не содержал контекста о бренде. Система была привязана к site.pro.
+
+### Решение
+- **`common/config/ad_generation.php`** (NEW) — конфигурируемый конфиг: бренд, описания категорий, USP, паттерны заголовков/описаний для всех 8 категорий (en + ru). Не привязан к site.pro — легко сменить бренд.
+- **TemplateAdGenerator** обновлён — читает паттерны из конфига. Каждая категория уникальные заголовки (email: "site.pro Email for {keyword}", бухгалтерия: "{keyword} — Smart Accounting" и т.д.)
+- **LlmAdGenerator** обновлён — обогащённый промпт с контекстом бренда, описанием категории, USP, аудиторией, языком. Системное сообщение из конфига. max_tokens 500→800.
+- **Выбор генератора** — radio-кнопки Template / LLM при "Generate All"
+- **Регенерация** — кнопка "Regenerate" в таблице групп + подтверждение перед удалением
+- **Тесты:** 7 новых (5 LLM prompt, 2 Template category), 25/25 генераторов проходят
+- **Деплой подтверждён**
+
+---
+
+## Phase 7 — Export + History
+
+### Создано
+- **ExportBatch** модель (`common/models/ExportBatch.php`) — ActiveRecord для `export_batches`
+- **ExportService** (`common/components/pipeline/ExportService.php`):
+  - Генерирует Google Ads Editor CSV: Campaign, Campaign Type, Keyword, Match Type, Headlines 1-15, Descriptions 1-4, Final URL, Path 1-2
+  - Campaign name = `{brand} — {category} — {audience} — {language}`
+  - Сохраняет файл в `runtime/exports/`
+  - Создаёт запись в `export_batches`
+  - Помечает ads как `exported`
+- **ExportController** (`backend/controllers/ExportController.php`):
+  - `actionIndex()` — страница экспорта + история
+  - `actionCreate()` — POST: генерация CSV
+  - `actionDownload($id)` — скачивание CSV-файла
+- **Export View** (`backend/views/export/index.php`): кнопка экспорта + GridView истории + скачивание
+- **Nav menu** — ссылка "Export" добавлена
+- **i18n** — ключи `export.*` (en/ru)
+- **Тесты:** 4 теста (CSV заголовки, запись в БД, статус exported, пустой экспорт)
+
+### Деплой
+- [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login, export page (redirect to login), nav menu updated
+
+---
+
 ## Что не реализовано (из BRIEF.md §§3–4)
 
-- **Фаза 7:** ExportService (п.10) + export history UI
-- **Фаза 7:** ExportService (п.10) + export history UI
 - **§4**: Settings page (volume threshold, forbidden/brand terms editors)
 - **README**: билингвальная документация (EN + RU) — требуется по BRIEF.md §6
