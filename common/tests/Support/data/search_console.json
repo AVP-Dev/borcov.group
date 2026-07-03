@@ -1,9 +1,9 @@
 {
   "rows": [
-    {"query": "how to make a website", "clicks": 450, "impressions": 12500, "ctr": 3.6, "position": 4.2},
-    {"query": "best hosting for small business", "clicks": 280, "impressions": 8900, "ctr": 3.15, "position": 5.1},
-    {"query": "конструктор интернет магазина", "clicks": 150, "impressions": 3400, "ctr": 4.41, "position": 3.7},
-    {"query": "domain name registrar", "clicks": 520, "impressions": 18700, "ctr": 2.78, "position": 2.9},
-    {"query": "cheap web hosting", "clicks": 680, "impressions": 22300, "ctr": 3.05, "position": 1.8}
+    {"keys": ["how to make a website"], "clicks": 450, "impressions": 12500, "ctr": 3.6, "position": 4.2},
+    {"keys": ["best hosting for small business"], "clicks": 280, "impressions": 8900, "ctr": 3.15, "position": 5.1},
+    {"keys": ["конструктор интернет магазина"], "clicks": 150, "impressions": 3400, "ctr": 4.41, "position": 3.7},
+    {"keys": ["domain name registrar"], "clicks": 520, "impressions": 18700, "ctr": 2.78, "position": 2.9},
+    {"keys": ["cheap web hosting"], "clicks": 680, "impressions": 22300, "ctr": 3.05, "position": 1.8}
   ]
 }

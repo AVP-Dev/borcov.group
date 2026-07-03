@@ -21,6 +21,19 @@ class ImportJob extends BaseObject implements JobInterface
 
     public function execute($queue): void
     {
+        try {
+            $this->doExecute($queue);
+        } catch (\Throwable $e) {
+            $batch = ImportBatch::findOne($this->batchId);
+            if ($batch !== null) {
+                $this->failBatch($batch, $e->getMessage());
+            }
+            throw $e;
+        }
+    }
+
+    private function doExecute($queue): void
+    {
         $batch = ImportBatch::findOne($this->batchId);
         if ($batch === null) {
             throw new \RuntimeException("ImportBatch #{$this->batchId} not found");
@@ -104,7 +117,7 @@ class ImportJob extends BaseObject implements JobInterface
                 'columnMap' => ['keyword' => 'Keyword', 'volume' => 'Volume'],
             ]),
             'search_console' => new JsonAdapter([
-                'fieldMap' => ['keyword' => 'query', 'volume' => 'impressions'],
+                'fieldMap' => ['keyword' => 'keys.0', 'volume' => 'impressions'],
             ]),
             default => throw new \InvalidArgumentException("Unknown source type: $sourceType"),
         };

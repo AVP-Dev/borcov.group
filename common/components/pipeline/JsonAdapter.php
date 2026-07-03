@@ -30,10 +30,26 @@ class JsonAdapter extends BaseObject implements SourceAdapterInterface
         foreach ($rows as $row) {
             $mapped = [];
             foreach ($this->fieldMap as $target => $source) {
-                $mapped[$target] = $row[$source] ?? null;
+                $mapped[$target] = $this->getNestedValue($row, $source);
             }
             yield $mapped;
         }
+    }
+
+    private function getNestedValue(array $row, string $path): mixed
+    {
+        if (!str_contains($path, '.')) {
+            return $row[$path] ?? null;
+        }
+        $parts = explode('.', $path);
+        $current = $row;
+        foreach ($parts as $part) {
+            if (!is_array($current) || !array_key_exists($part, $current)) {
+                return null;
+            }
+            $current = $current[$part];
+        }
+        return $current;
     }
 
     private function extractRows(array $data): array

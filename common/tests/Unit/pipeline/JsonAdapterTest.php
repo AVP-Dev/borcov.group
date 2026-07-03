@@ -15,7 +15,7 @@ final class JsonAdapterTest extends Unit
     public function testParseSearchConsoleJson(): void
     {
         $adapter = new JsonAdapter([
-            'fieldMap' => ['keyword' => 'query', 'volume' => 'impressions'],
+            'fieldMap' => ['keyword' => 'keys.0', 'volume' => 'impressions'],
         ]);
 
         $rows = iterator_to_array($adapter->parse(codecept_data_dir() . 'search_console.json'));
@@ -28,7 +28,7 @@ final class JsonAdapterTest extends Unit
     public function testParseReturnsAllRows(): void
     {
         $adapter = new JsonAdapter([
-            'fieldMap' => ['keyword' => 'query', 'volume' => 'impressions'],
+            'fieldMap' => ['keyword' => 'keys.0', 'volume' => 'impressions'],
         ]);
 
         $rows = iterator_to_array($adapter->parse(codecept_data_dir() . 'search_console.json'));
@@ -39,13 +39,41 @@ final class JsonAdapterTest extends Unit
     public function testParseWithCustomFieldMap(): void
     {
         $adapter = new JsonAdapter([
-            'fieldMap' => ['keyword' => 'query', 'clicks' => 'clicks'],
+            'fieldMap' => ['keyword' => 'keys.0', 'clicks' => 'clicks'],
         ]);
 
         $rows = iterator_to_array($adapter->parse(codecept_data_dir() . 'search_console.json'));
 
         verify($rows[0]['keyword'])->equals('how to make a website');
         verify($rows[0]['clicks'])->equals(450);
+    }
+
+    public function testParseHandlesDotNotation(): void
+    {
+        $adapter = new JsonAdapter([
+            'fieldMap' => ['keyword' => 'keys.0', 'clicks' => 'clicks'],
+        ]);
+
+        $tmpFile = tempnam(sys_get_temp_dir(), 'json_test_');
+        file_put_contents($tmpFile, '{"rows": [{"keys": ["test keyword"], "clicks": 10}]}');
+
+        $rows = iterator_to_array($adapter->parse($tmpFile));
+        unlink($tmpFile);
+
+        verify($rows)->arrayCount(1);
+        verify($rows[0]['keyword'])->equals('test keyword');
+        verify($rows[0]['clicks'])->equals(10);
+    }
+
+    public function testParseDotNotationNotFoundReturnsNull(): void
+    {
+        $adapter = new JsonAdapter([
+            'fieldMap' => ['keyword' => 'nonexistent.0', 'volume' => 'impressions'],
+        ]);
+
+        $rows = iterator_to_array($adapter->parse(codecept_data_dir() . 'search_console.json'));
+
+        verify($rows[0]['keyword'])->null();
     }
 
     public function testParseNonExistentFile(): void
@@ -74,7 +102,7 @@ final class JsonAdapterTest extends Unit
     public function testParseHandlesRussianQueries(): void
     {
         $adapter = new JsonAdapter([
-            'fieldMap' => ['keyword' => 'query', 'volume' => 'impressions'],
+            'fieldMap' => ['keyword' => 'keys.0', 'volume' => 'impressions'],
         ]);
 
         $rows = iterator_to_array($adapter->parse(codecept_data_dir() . 'search_console.json'));

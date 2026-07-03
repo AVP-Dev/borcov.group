@@ -20,11 +20,19 @@ foreach ($dataProvider->getModels() as $model) {
     }
 }
 
-if ($hasProcessing):
-    $this->registerJs('
-        setTimeout(function() { location.reload(); }, 3000);
-    ');
-endif;
+$this->registerJs('
+    document.querySelectorAll("[data-utc-time]").forEach(function(el) {
+        var ts = parseInt(el.dataset.utcTime, 10);
+        if (ts) {
+            var d = new Date(ts * 1000);
+            var pad = function(n) { return n.toString().padStart(2, "0"); };
+            el.textContent = d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate())
+                + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+        }
+    });
+    ' . ($hasProcessing ? '
+    setTimeout(function() { location.reload(); }, 3000);
+' : ''));
 ?>
 <div class="import-batches">
     <h1 class="h3 mb-4"><?= Html::encode($this->title) ?></h1>
@@ -86,7 +94,9 @@ endif;
             [
                 'attribute' => 'imported_at',
                 'label' => Yii::t('app', 'import.imported_at'),
-                'format' => ['datetime', 'php:Y-m-d H:i'],
+                'value' => fn($model) => $model->imported_at,
+                'format' => 'raw',
+                'contentOptions' => ['data-utc-time' => fn($model) => $model->imported_at],
             ],
         ],
     ]) ?>
