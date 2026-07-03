@@ -27,7 +27,7 @@ class SiteController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['login', 'error', 'status', 'set-language', 'debug-user'],
+                        'actions' => ['login', 'error', 'status', 'set-language'],
                         'allow' => true,
                     ],
                     [
@@ -83,30 +83,6 @@ class SiteController extends Controller
             'phase'  => '-1 (skeleton)',
             'time'   => date('c'),
         ]);
-    }
-
-    public function actionDebugUser(): \yii\web\Response
-    {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $user = \common\models\User::findByUsername('admin');
-        $db = Yii::$app->db;
-        $dsn = '';
-        try {
-            $dsn = $db->dsn;
-        } catch (\Throwable $e) {
-            $dsn = 'ERROR: ' . $e->getMessage();
-        }
-        $result = [
-            'exists' => false,
-            'dsn' => $dsn,
-        ];
-        if ($user !== null) {
-            $result['exists'] = true;
-            $result['has_password_hash'] = !empty($user->password_hash);
-            $result['hash_prefix'] = substr($user->password_hash ?? '', 0, 10) . '...';
-            $result['status'] = $user->status;
-        }
-        return $this->asJson($result);
     }
 
     /**

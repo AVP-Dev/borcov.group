@@ -66,4 +66,40 @@
 - [x] Добавлены 20 новых ключей (en/ru): заголовки, ошибки, статусы, названия источников
 
 ### Деплой
-- [ ] Деплой на Coolify — ожидает подтверждения
+- [x] **Деплой подтверждён:** health OK, login page, CSRF, Bootstrap CSS
+
+---
+
+## Фаза 2: Cleaning Pipeline — Normalization, Cleaning, Dedup, Volume Filter
+
+### Создано
+- [x] `common/components/pipeline/NormalizationService.php` — lowercase, trim, collapse whitespace, unify спецсимволы (кавычки, тире)
+- [x] `common/components/pipeline/CleaningService.php` — фильтр: короткие (<2 chars), только цифры, стоп-слова, brand check (own vs competitor), forbidden terms (exact/contains/regex), Ahrefs artifacts, уже-использованные
+- [x] `common/components/pipeline/DeduplicationService.php` — pg_trgm `similarity()`, сохраняет keyword с большим volume
+- [x] `common/components/pipeline/VolumeFilterService.php` — порог volume (10), исключение для ключей из 3+ источников
+- [x] `common/jobs/CleanJob.php` — оркестратор: Normalization → Cleaning → Dedup → VolumeFilter; вызывается из ImportJob после upsert
+- [x] `common/models/BrandTerm.php` — ActiveRecord для brand_terms (is_own_brand)
+- [x] `common/models/ForbiddenTerm.php` — ActiveRecord для forbidden_terms (match_type: exact/contains/regex)
+- [x] `console/migrations/m260703_000008_seed_brand_forbidden_terms.php` — seed: site.pro (own), 11 конкурентов, 12 запрещённых терминов
+- [x] `common/config/params.php` — pipeline.volume.min (10), pipeline.volume.min_source_count (3), pipeline.dedup.similarity_threshold (0.6)
+
+### Тесты
+- [x] `common/tests/Unit/pipeline/NormalizationServiceTest.php` — 7 тестов (lowercase, trim, collapse, unify chars, cyrillic-latin, empty, batch)
+- [x] `common/tests/Unit/pipeline/CleaningServiceTest.php` — 8 тестов (valid, too short, digits, stop word, competitor brand, own brand, forbidden exact, forbidden contains, artifact)
+- [x] `common/tests/Unit/pipeline/DeduplicationServiceTest.php` — 2 теста (finds similar, no match for dissimilar)
+- [x] `common/tests/Unit/pipeline/VolumeFilterServiceTest.php` — 2 теста (rejects low volume, keeps low volume in 3+ sources)
+- [x] Итого 42 теста, 97 ассершнов — все проходят
+
+### Статический анализ
+- [x] PHPStan level 5 — 0 ошибок в новом коде
+
+### i18n
+- [x] 15 новых ключей (en/ru): clean.* — причины отбраковки, статусы
+
+### Известные проблемы (решённые)
+- NormalizationServiceTest: `\u{2019}` не интерпретировался в одинарных кавычках PHP — пофикшено двойными кавычками
+- CleaningServiceTest: сравнение i18n-ключей вместо переведённых строк — пофикшено проверкой на суффикс ключа
+- Пароль `ADMIN_PASSWORD` не применялся из env — пофикшено: `admin/set-password` читает env напрямую через getenv()
+
+### Деплой на реальный URL
+- [x] **Подтверждено:** https://vibecoding.avpdev.com/ — login, dashboard, все миграции на сервере
