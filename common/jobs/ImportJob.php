@@ -114,6 +114,17 @@ class ImportJob extends BaseObject implements JobInterface
 
     private function createAdapter(string $sourceType): SourceAdapterInterface
     {
+        $ext = strtolower(pathinfo($this->filePath, PATHINFO_EXTENSION));
+
+        if ($ext === 'json') {
+            return match ($sourceType) {
+                'search_console' => new JsonAdapter([
+                    'fieldMap' => ['keyword' => 'keys.0', 'volume' => 'impressions'],
+                ]),
+                default => throw new \InvalidArgumentException("JSON not supported for source type: $sourceType"),
+            };
+        }
+
         return match ($sourceType) {
             'gads' => new CsvAdapter([
                 'delimiter' => ',',
@@ -127,8 +138,9 @@ class ImportJob extends BaseObject implements JobInterface
                 'delimiter' => ',',
                 'columnMap' => ['keyword' => 'Keyword', 'volume' => 'Volume'],
             ]),
-            'search_console' => new JsonAdapter([
-                'fieldMap' => ['keyword' => 'keys.0', 'volume' => 'impressions'],
+            'search_console' => new CsvAdapter([
+                'delimiter' => ',',
+                'columnMap' => ['keyword' => 'Search query', 'volume' => 'Impressions'],
             ]),
             default => throw new \InvalidArgumentException("Unknown source type: $sourceType"),
         };

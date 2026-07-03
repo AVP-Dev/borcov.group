@@ -95,4 +95,30 @@ final class CsvAdapterTest extends Unit
         $this->expectException(\RuntimeException::class);
         iterator_to_array($adapter->parse('/tmp/nonexistent_' . uniqid() . '.csv'));
     }
+
+    public function testParseSearchConsoleCsv(): void
+    {
+        $adapter = new CsvAdapter([
+            'columnMap' => ['keyword' => 'Search query', 'volume' => 'Impressions'],
+        ]);
+
+        $rows = iterator_to_array($adapter->parse(codecept_data_dir() . 'search_console.csv'));
+
+        verify($rows)->arrayCount(5);
+        verify($rows[0]['keyword'])->equals('how to make a website');
+        verify($rows[0]['volume'])->equals('12500');
+        verify($rows[1]['keyword'])->equals('best hosting for small business');
+    }
+
+    public function testParseSearchConsoleCsvCaseInsensitive(): void
+    {
+        $adapter = new CsvAdapter([
+            'columnMap' => ['keyword' => 'SEARCH QUERY', 'volume' => 'impressions'],
+        ]);
+
+        $rows = iterator_to_array($adapter->parse(codecept_data_dir() . 'search_console.csv'));
+
+        verify($rows)->arrayCount(5);
+        verify($rows[0]['keyword'])->equals('how to make a website');
+    }
 }
