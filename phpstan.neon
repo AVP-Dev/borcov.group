@@ -41,7 +41,6 @@ parameters:
         - YII_ENV_TEST
 
     ignoreErrors:
-        - '#Access to an undefined property yii\\web\\IdentityInterface::\$username.#'
         - '#Access to an undefined property common\\models\\\w+::\$#'
         - '#Access to an undefined property .*::\$queue#'
 
